@@ -127,9 +127,24 @@
                     </div>
                 </div>
 
-                <!-- UPI Payment -->
+                <!-- Razorpay Payment -->
                 <div class="payment-section">
-                    <h4>Pay via UPI</h4>
+                    <button class="btn btn-primary btn-block btn-lg razorpay-btn" onclick="payWithRazorpay()">
+                        💳 Pay with Razorpay
+                    </button>
+                    <p class="text-secondary"
+                        style="text-align: center; margin-top: var(--spacing-sm); font-size: 0.85rem;">Cards, UPI,
+                        Netbanking, Wallets & more</p>
+                </div>
+
+                <!-- UPI Fallback Divider -->
+                <div class="payment-divider">
+                    <span>OR</span>
+                </div>
+
+                <!-- UPI Payment (Fallback) -->
+                <div class="payment-section">
+                    <h4>Pay via UPI directly</h4>
 
                     <!-- QR Code -->
                     <div class="qr-code-container" id="qrCodeContainer">
@@ -156,8 +171,8 @@
                             <p class="form-hint">Enter the 12-digit transaction ID from your payment app</p>
                         </div>
 
-                        <button class="btn btn-primary btn-block" onclick="submitPayment()">
-                            I have Paid
+                        <button class="btn btn-ghost btn-block" onclick="submitPayment()">
+                            I have Paid via UPI
                         </button>
                     </div>
                 </div>
@@ -247,6 +262,30 @@
             padding-top: var(--spacing-lg);
         }
 
+        .razorpay-btn {
+            font-size: 1.1rem;
+            padding: var(--spacing-md) var(--spacing-lg);
+        }
+
+        .payment-divider {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            margin: var(--spacing-lg) 0;
+            color: var(--color-text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .payment-divider::before,
+        .payment-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--color-border);
+        }
+
         @media (max-width: 768px) {
             .navbar-nav {
                 display: none;
@@ -259,9 +298,10 @@
     </style>
 
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script type="module">
         import { account, databases, storage, APPWRITE_CONFIG, showLoading, hideLoading, showAlert, logout } from '/js/appwrite.js';
-        import { ID } from 'https://cdn.jsdelivr.net/npm/appwrite@14.0.1/+esm';
+        import { ID, Query } from 'https://cdn.jsdelivr.net/npm/appwrite@14.0.1/+esm';
 
         let currentUser = null;
         let bookingData = {};
@@ -420,7 +460,49 @@
             window.location.href = appSchemes[app] || `upi://pay?pa=${upiId}&pn=GOD Services&am=${bookingData.estimatedPrice}&cu=INR`;
         };
 
-        // Submit payment
+        // Pay with Razorpay
+        window.payWithRazorpay = function () {
+            const options = {
+                key: APPWRITE_CONFIG.razorpayKeyId,
+                amount: bookingData.estimatedPrice * 100, // Razorpay expects paise
+                currency: 'INR',
+                name: 'GOD Services',
+                description: `${bookingData.serviceCategory.replace('-', ' ').toUpperCase()} Service`,
+                handler: async function (response) {
+                    // Payment successful — create booking
+                    await createBooking({
+                        paymentStatus: 'paid',
+                        paymentMethod: 'razorpay',
+                        razorpayPaymentId: response.razorpay_payment_id
+                    });
+                },
+                prefill: {
+                    name: bookingData.customerName,
+                    contact: bookingData.customerPhone
+                },
+                theme: {
+                    color: '#f59e0b'
+                },
+                modal: {
+                    ondismiss: function () {
+                        console.log('Razorpay modal closed');
+                    }
+                }
+            };
+
+            try {
+                const rzp = new Razorpay(options);
+                rzp.on('payment.failed', function (response) {
+                    showAlert('Payment failed: ' + response.error.description, 'error');
+                });
+                rzp.open();
+            } catch (error) {
+                console.error('Razorpay error:', error);
+                showAlert('Could not open payment gateway. Please try UPI below.', 'error');
+            }
+        };
+
+        // Submit UPI payment (fallback)
         window.submitPayment = async function () {
             const utr = document.getElementById('utrNumber').value.trim();
 
@@ -429,10 +511,18 @@
                 return;
             }
 
+            await createBooking({
+                paymentStatus: 'paid',
+                paymentMethod: 'upi',
+                utr: utr
+            });
+        };
+
+        // Create booking in Appwrite
+        async function createBooking(paymentInfo) {
             showLoading('Creating booking...');
 
             try {
-                // Create booking
                 const booking = await databases.createDocument(
                     APPWRITE_CONFIG.databaseId,
                     APPWRITE_CONFIG.collections.bookings,
@@ -447,8 +537,8 @@
                         status: 'pending',
                         scheduledTime: bookingData.scheduledTime,
                         estimatedPrice: bookingData.estimatedPrice,
-                        paymentStatus: 'paid',
-                        utr: utr,
+                        paymentStatus: paymentInfo.paymentStatus,
+                        utr: paymentInfo.utr || '',
                         createdAt: new Date().toISOString(),
                         updatedAt: new Date().toISOString()
                     }
@@ -473,7 +563,7 @@
             } finally {
                 hideLoading();
             }
-        };
+        }
 
         // Logout handler
         document.getElementById('logoutBtn').addEventListener('click', logout);

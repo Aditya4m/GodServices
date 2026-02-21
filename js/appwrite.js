@@ -23,7 +23,8 @@ const APPWRITE_CONFIG = {
   buckets: {
     idProofs: 'id-proofs',
     qrCodes: 'qr-codes'
-  }
+  },
+  razorpayKeyId: 'rzp_test_REPLACE_WITH_YOUR_KEY' // Replace with your Razorpay Key ID
 };
 
 // ============================================
