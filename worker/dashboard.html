@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Dashboard - GOD Services</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container flex-between">
+            <div class="navbar-brand">GOD SERVICES</div>
+            <ul class="navbar-nav">
+                <li><a href="/worker/dashboard.html" class="nav-link active">Dashboard</a></li>
+                <li><a href="/worker/jobs.html" class="nav-link">Jobs</a></li>
+                <li><a href="/worker/profile.html" class="nav-link">Profile</a></li>
+                <li><button class="btn btn-ghost btn-sm" id="logoutBtn">Logout</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container" style="padding: var(--spacing-xl) var(--spacing-md);">
+
+        <!-- Welcome Section -->
+        <section class="welcome-section flex-between">
+            <div>
+                <h1>Welcome, <span id="workerName">Worker</span></h1>
+                <p class="text-secondary" id="workerSkill">Service Provider</p>
+            </div>
+
+            <!-- Availability Toggle -->
+            <div class="availability-control">
+                <label class="toggle">
+                    <input type="checkbox" id="availabilityToggle">
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="availability-label" id="availabilityLabel">Set Available</span>
+            </div>
+        </section>
+
+        <!-- Approval Status (if not approved) -->
+        <div id="approvalAlert" class="alert alert-warning mt-lg hidden">
+            <strong>⏳ Pending Approval:</strong> Your account is awaiting admin approval. You'll be notified once
+            approved.
+        </div>
+
+        <!-- Quick Stats -->
+        <section class="stats-section grid grid-4 gap-md mt-lg">
+            <div class="stat-card">
+                <div class="stat-value" id="pendingJobs">0</div>
+                <div class="stat-label">Pending Requests</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="activeJobs">0</div>
+                <div class="stat-label">Active Jobs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="completedJobs">0</div>
+                <div class="stat-label">Completed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalEarnings">₹0</div>
+                <div class="stat-label">Total Earnings</div>
+            </div>
+        </section>
+
+        <!-- Pending Job Requests -->
+        <section class="jobs-section mt-xl">
+            <h2>Pending Job Requests</h2>
+            <div id="pendingJobsContainer" class="mt-md">
+                <!-- Pending jobs will be loaded dynamically -->
+            </div>
+        </section>
+
+        <!-- Today's Schedule -->
+        <section class="schedule-section mt-xl">
+            <h2>Today's Schedule</h2>
+            <div id="scheduleContainer" class="mt-md">
+                <!-- Schedule will be loaded dynamically -->
+            </div>
+        </section>
+
+
+
+    </main>
+
+    <style>
+        .welcome-section {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .welcome-section h1 {
+            font-size: 2.5rem;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .welcome-section h1 span {
+            color: var(--color-accent-primary);
+        }
+
+        .availability-control {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .availability-label {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--color-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .availability-label.active {
+            color: var(--color-success);
+        }
+
+        .stat-card {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+            /* Generous padding */
+            text-align: center;
+            transition: transform var(--transition-fast);
+        }
+
+        .jobs-section {
+            margin-top: var(--spacing-xxl);
+        }
+
+        .schedule-section {
+            margin-top: var(--spacing-xxl);
+        }
+
+        .jobs-section h2,
+        .schedule-section h2 {
+            margin-bottom: var(--spacing-lg);
+            padding-bottom: var(--spacing-sm);
+            border-bottom: 2px solid var(--color-border);
+        }
+
+        .job-request-card {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-left: 4px solid var(--color-accent-primary);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+            transition: all var(--transition-fast);
+        }
+
+        .job-request-card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .job-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .job-title {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            text-transform: uppercase;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .job-time {
+            color: var(--color-text-muted);
+            font-size: 0.9rem;
+        }
+
+        .job-details {
+            margin-bottom: var(--spacing-md);
+        }
+
+        .detail-item {
+            padding: var(--spacing-xs) 0;
+            font-size: 0.95rem;
+        }
+
+        .detail-item strong {
+            color: var(--color-text-secondary);
+            margin-right: var(--spacing-xs);
+        }
+
+        .detail-item span {
+            color: var(--color-text-primary);
+        }
+
+        .job-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+
+        .schedule-item {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-sm);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .schedule-time {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--color-accent-primary);
+        }
+
+        .schedule-details {
+            flex: 1;
+            margin: 0 var(--spacing-md);
+        }
+
+        .schedule-service {
+            font-weight: 600;
+            color: var(--color-text-primary);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .schedule-location {
+            color: var(--color-text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: var(--spacing-xl);
+            color: var(--color-text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: var(--spacing-md);
+            opacity: 1;
+        }
+
+
+
+        @media (max-width: 768px) {
+            .navbar-nav {
+                display: none;
+            }
+
+            .welcome-section {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--spacing-md);
+            }
+
+            .job-actions {
+                flex-direction: column;
+            }
+
+            .schedule-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--spacing-sm);
+            }
+        }
+    </style>
+
+    <script type="module">
+        import { account, databases, storage, APPWRITE_CONFIG, showLoading, hideLoading, showAlert, logout } from '/js/appwrite.js';
+        import { Query, ID } from 'https://cdn.jsdelivr.net/npm/appwrite@14.0.1/+esm';
+
+        let currentUser = null;
+        let workerData = null;
+
+        // Initialize
+        async function init() {
+            showLoading('Loading dashboard...');
+
+            try {
+                currentUser = await account.get();
+
+                // Get worker data
+                const workerResponse = await databases.listDocuments(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.workers,
+                    [Query.equal('userId', currentUser.$id)]
+                );
+
+                if (workerResponse.documents.length > 0) {
+                    workerData = workerResponse.documents[0];
+
+                    // Get user data for name
+                    const userResponse = await databases.listDocuments(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.users,
+                        [Query.equal('userId', currentUser.$id)]
+                    );
+
+                    const userName = userResponse.documents.length > 0 ? userResponse.documents[0].name : 'Worker';
+
+                    // Update UI with worker info
+                    document.getElementById('workerName').textContent = userName;
+                    document.getElementById('workerSkill').textContent = workerData.skillCategory.replace('-', ' ').toUpperCase();
+
+                    // Set availability toggle
+                    document.getElementById('availabilityToggle').checked = workerData.isActive;
+                    updateAvailabilityLabel(workerData.isActive);
+
+                    // Show approval alert if not approved
+                    if (!workerData.isApproved) {
+                        document.getElementById('approvalAlert').classList.remove('hidden');
+                    }
+
+                    // Load data
+                    await Promise.all([
+                        loadJobStats(),
+                        loadPendingJobs(),
+                        loadTodaySchedule()
+                    ]);
+                } else {
+                    showAlert('Worker profile not found. Please complete your profile.', 'error');
+                    setTimeout(() => {
+                        window.location.href = '/worker/profile.html?setup=true';
+                    }, 2000);
+                }
+
+            } catch (error) {
+                console.error('Initialization error:', error);
+                showAlert('Failed to load dashboard. Please try again.', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Load job statistics
+        async function loadJobStats() {
+            try {
+                const bookingsResponse = await databases.listDocuments(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.bookings,
+                    [Query.equal('workerId', workerData.$id)]
+                );
+
+                const bookings = bookingsResponse.documents;
+
+                document.getElementById('pendingJobs').textContent = bookings.filter(b => b.status === 'pending').length;
+                document.getElementById('activeJobs').textContent = bookings.filter(b => ['accepted', 'in-progress'].includes(b.status)).length;
+                document.getElementById('completedJobs').textContent = bookings.filter(b => b.status === 'completed').length;
+
+                const totalEarnings = bookings
+                    .filter(b => b.status === 'completed')
+                    .reduce((sum, b) => sum + (b.estimatedPrice || 0), 0);
+
+                document.getElementById('totalEarnings').textContent = `₹${totalEarnings}`;
+
+            } catch (error) {
+                console.error('Error loading job stats:', error);
+            }
+        }
+
+        // Load pending job requests
+        async function loadPendingJobs() {
+            try {
+                const bookingsResponse = await databases.listDocuments(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.bookings,
+                    [
+                        Query.equal('workerId', workerData.$id),
+                        Query.equal('status', 'pending'),
+                        Query.orderDesc('createdAt')
+                    ]
+                );
+
+                const bookings = bookingsResponse.documents;
+                const container = document.getElementById('pendingJobsContainer');
+
+                if (bookings.length === 0) {
+                    container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">📭</div>
+              <p>No pending job requests</p>
+            </div>
+          `;
+                    return;
+                }
+
+                container.innerHTML = '';
+
+                bookings.forEach(booking => {
+                    const jobCard = document.createElement('div');
+                    jobCard.className = 'job-request-card';
+                    jobCard.innerHTML = `
+            <div class="job-header">
+              <div>
+                <div class="job-title">${booking.serviceCategory}</div>
+                <div class="job-time">${new Date(booking.createdAt).toLocaleString()}</div>
+              </div>
+              <span class="badge badge-warning">Pending</span>
+            </div>
+            
+            <div class="job-details">
+              <div class="detail-item">
+                <strong>Location:</strong>
+                <span>${booking.location}, ${booking.pincode}</span>
+              </div>
+              <div class="detail-item">
+                <strong>Scheduled:</strong>
+                <span>${new Date(booking.scheduledTime).toLocaleString()}</span>
+              </div>
+              <div class="detail-item">
+                <strong>Problem:</strong>
+                <span>${booking.problemDescription}</span>
+              </div>
+              <div class="detail-item">
+                <strong>Estimated Price:</strong>
+                <span>₹${booking.estimatedPrice}</span>
+              </div>
+            </div>
+            
+            <div class="job-actions">
+              <button class="btn btn-primary" onclick="acceptJob('${booking.$id}')">
+                Accept Job
+              </button>
+              <button class="btn btn-secondary" onclick="rejectJob('${booking.$id}')">
+                Reject
+              </button>
+            </div>
+          `;
+
+                    container.appendChild(jobCard);
+                });
+
+            } catch (error) {
+                console.error('Error loading pending jobs:', error);
+            }
+        }
+
+        // Load today's schedule
+        async function loadTodaySchedule() {
+            try {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const tomorrow = new Date(today);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+
+                const bookingsResponse = await databases.listDocuments(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.bookings,
+                    [
+                        Query.equal('workerId', workerData.$id),
+                        Query.equal('status', 'accepted'),
+                        Query.orderAsc('scheduledTime')
+                    ]
+                );
+
+                const todayBookings = bookingsResponse.documents.filter(b => {
+                    const scheduledDate = new Date(b.scheduledTime);
+                    return scheduledDate >= today && scheduledDate < tomorrow;
+                });
+
+                const container = document.getElementById('scheduleContainer');
+
+                if (todayBookings.length === 0) {
+                    container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">📅</div>
+              <p>No jobs scheduled for today</p>
+            </div>
+          `;
+                    return;
+                }
+
+                container.innerHTML = '';
+
+                todayBookings.forEach(booking => {
+                    const scheduleItem = document.createElement('div');
+                    scheduleItem.className = 'schedule-item';
+                    scheduleItem.innerHTML = `
+            <div class="schedule-time">${new Date(booking.scheduledTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
+            <div class="schedule-details">
+              <div class="schedule-service">${booking.serviceCategory.replace('-', ' ').toUpperCase()}</div>
+              <div class="schedule-location">${booking.location}</div>
+            </div>
+            <span class="badge badge-info">Active</span>
+          `;
+
+                    container.appendChild(scheduleItem);
+                });
+
+            } catch (error) {
+                console.error('Error loading schedule:', error);
+            }
+        }
+
+        // Availability toggle handler
+        document.getElementById('availabilityToggle').addEventListener('change', async (e) => {
+            const isActive = e.target.checked;
+
+            showLoading('Updating availability...');
+
+            try {
+                await databases.updateDocument(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.workers,
+                    workerData.$id,
+                    { isActive }
+                );
+
+                workerData.isActive = isActive;
+                updateAvailabilityLabel(isActive);
+                showAlert(`You are now ${isActive ? 'available' : 'busy'}`, 'success');
+
+            } catch (error) {
+                console.error('Error updating availability:', error);
+                showAlert('Failed to update availability', 'error');
+                e.target.checked = !isActive; // Revert toggle
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // Update availability label
+        function updateAvailabilityLabel(isActive) {
+            const label = document.getElementById('availabilityLabel');
+            label.textContent = isActive ? 'Available' : 'Busy';
+            label.classList.toggle('active', isActive);
+        }
+
+        // Accept job
+        window.acceptJob = async function (bookingId) {
+            showLoading('Accepting job...');
+
+            try {
+                await databases.updateDocument(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.bookings,
+                    bookingId,
+                    {
+                        status: 'accepted',
+                        updatedAt: new Date().toISOString()
+                    }
+                );
+
+                showAlert('Job accepted successfully!', 'success');
+                await loadPendingJobs();
+                await loadJobStats();
+                await loadTodaySchedule();
+
+            } catch (error) {
+                console.error('Error accepting job:', error);
+                showAlert('Failed to accept job', 'error');
+            } finally {
+                hideLoading();
+            }
+        };
+
+        // Reject job
+        window.rejectJob = async function (bookingId) {
+            if (!confirm('Are you sure you want to reject this job?')) return;
+
+            showLoading('Rejecting job...');
+
+            try {
+                await databases.updateDocument(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.bookings,
+                    bookingId,
+                    {
+                        status: 'cancelled',
+                        updatedAt: new Date().toISOString()
+                    }
+                );
+
+                showAlert('Job rejected', 'info');
+                await loadPendingJobs();
+                await loadJobStats();
+
+            } catch (error) {
+                console.error('Error rejecting job:', error);
+                showAlert('Failed to reject job', 'error');
+            } finally {
+                hideLoading();
+            }
+        };
+
+
+
+        // Logout handler
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+
+        // Initialize on page load
+        init();
+    </script>
+
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+        <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <svg id="moon-icon" class="hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+    </button>
+
+    <script type="module">
+        import { toggleTheme, initTheme } from '/js/theme.js';
+        window.toggleTheme = toggleTheme;
+        initTheme();
+    </script>
+
+</body>
+
+</html>

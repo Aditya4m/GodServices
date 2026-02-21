@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - GOD Services</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container flex-between">
+            <div class="navbar-brand">GOD SERVICES</div>
+            <ul class="navbar-nav">
+                <li><a href="/worker/dashboard.html" class="nav-link">Dashboard</a></li>
+                <li><a href="/worker/jobs.html" class="nav-link">Jobs</a></li>
+                <li><a href="/worker/profile.html" class="nav-link active">Profile</a></li>
+                <li><button class="btn btn-ghost btn-sm" id="logoutBtn">Logout</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container" style="padding: var(--spacing-xl) var(--spacing-md);">
+
+        <!-- Page Header -->
+        <section class="page-header mb-lg">
+            <h1>My Profile</h1>
+            <p class="text-secondary">Manage your professional identity and payment settings</p>
+        </section>
+
+        <div class="grid grid-2-1 gap-xl">
+            <!-- Left Column: Settings -->
+            <div class="flex flex-column gap-xxl">
+
+                <!-- Personal Details -->
+                <section class="settings-card card">
+                    <div class="card-header">
+                        <h2>Personal Details</h2>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="userNameInput">Full Name</label>
+                        <input type="text" id="userNameInput" class="form-input" placeholder="Enter your full name">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="userEmailInput">Email Address</label>
+                        <input type="email" id="userEmailInput" class="form-input" placeholder="Enter your email">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="userPhoneInput">Phone Number</label>
+                        <input type="text" id="userPhoneInput" class="form-input" disabled readonly>
+                        <p class="form-hint">Phone number cannot be changed as it's linked to your account.</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="savePersonalDetails()">Save Personal Details</button>
+                </section>
+
+                <!-- Professional Details -->
+                <section class="settings-card card">
+                    <div class="card-header">
+                        <h2>Professional Details</h2>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="skillCategory">Skill Category</label>
+                        <select id="skillCategory" class="form-select">
+                            <option value="plumber">Plumber</option>
+                            <option value="electrician">Electrician</option>
+                            <option value="ac-technician">AC Technician</option>
+                            <option value="carpenter">Carpenter</option>
+                            <option value="painter">Painter</option>
+                            <option value="cleaner">Cleaner</option>
+                            <option value="gardener">Gardener</option>
+                            <option value="mechanic">Mechanic</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-2 gap-md">
+                        <div class="form-group">
+                            <label class="form-label" for="experienceInput">Experience (Years)</label>
+                            <input type="number" id="experienceInput" class="form-input" placeholder="e.g. 5">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="chargesInput">Hourly Rate (₹)</label>
+                            <input type="number" id="chargesInput" class="form-input" placeholder="e.g. 500">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="serviceAreaInput">Service Areas (Pincodes)</label>
+                        <input type="text" id="serviceAreaInput" class="form-input" placeholder="e.g. 110001, 110002">
+                        <p class="form-hint">Comma separated pincodes you serve.</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="saveProfessionalDetails()">Save Professional
+                        Details</button>
+                </section>
+
+                <!-- Payment Settings -->
+                <section class="settings-card card">
+                    <div class="card-header">
+                        <h2>Payment Settings</h2>
+                    </div>
+                    <p class="text-secondary mb-md">Set how customers will pay you after service completion.</p>
+
+                    <div class="form-group">
+                        <label class="form-label" for="upiIdInput">UPI ID</label>
+                        <input type="text" id="upiIdInput" class="form-input" placeholder="e.g. yourname@upi"
+                            maxlength="50">
+                        <p class="form-hint">Used for auto-generating QR codes if no image is uploaded.</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">UPI QR Code Image</label>
+                        <div class="qr-upload-area" id="qrUploadArea">
+                            <input type="file" id="qrFileInput" accept="image/jpeg,image/png,image/webp"
+                                style="display:none">
+                            <div class="qr-preview-wrap" id="qrPreviewWrap">
+                                <img id="qrPreviewImg" src="" alt="QR Preview" class="qr-preview-img hidden">
+                                <div class="qr-upload-placeholder" id="qrUploadPlaceholder">
+                                    <div style="font-size:2.5rem;">📷</div>
+                                    <p>Click to upload QR image</p>
+                                    <p class="text-secondary" style="font-size:0.85rem;">JPG, PNG or WebP · Max 2MB</p>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="form-hint" id="qrFileName"></p>
+                    </div>
+
+                    <div class="flex gap-sm">
+                        <button class="btn btn-primary" onclick="savePaymentSettings()">Save Payment Settings</button>
+                        <button class="btn btn-secondary hidden" id="removeQrBtn" onclick="removeQrCode()">Remove QR
+                            Image</button>
+                    </div>
+                </section>
+
+            </div>
+
+            <!-- Right Column: Status & Preview -->
+            <div class="flex flex-column gap-xl">
+                <section class="status-card card">
+                    <h2>Account Status</h2>
+                    <div id="statusBadge" class="badge mt-md">Checking...</div>
+                    <div id="approvalText" class="text-secondary mt-sm">...</div>
+                </section>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+        <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <svg id="moon-icon" class="hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+    </button>
+
+    <style>
+        .grid-2-1 {
+            grid-template-columns: 2fr 1fr;
+        }
+
+        .settings-card {
+            padding: var(--spacing-xl);
+        }
+
+        .card-header {
+            margin-bottom: var(--spacing-lg);
+            border-bottom: 1px solid var(--color-border);
+            padding-bottom: var(--spacing-sm);
+        }
+
+        .qr-upload-area {
+            border: 2px dashed var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            text-align: center;
+            cursor: pointer;
+            transition: border-color var(--transition-fast);
+            background: var(--color-bg-secondary);
+        }
+
+        .qr-upload-area:hover {
+            border-color: var(--color-accent-primary);
+        }
+
+        .qr-preview-img {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: var(--radius-md);
+            object-fit: contain;
+        }
+
+        .status-card {
+            padding: var(--spacing-xl);
+            text-align: center;
+        }
+
+        .status-card .badge {
+            font-size: 1.1rem;
+            padding: 0.5rem 1.5rem;
+        }
+
+        @media (max-width: 992px) {
+            .grid-2-1 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <script type="module">
+        import { account, databases, storage, APPWRITE_CONFIG, showLoading, hideLoading, showAlert, logout } from '/js/appwrite.js';
+        import { Query, ID } from 'https://cdn.jsdelivr.net/npm/appwrite@14.0.1/+esm';
+        import { toggleTheme, initTheme } from '/js/theme.js';
+
+        window.toggleTheme = toggleTheme;
+        initTheme();
+
+        let currentUser = null;
+        let workerData = null;
+        let userData = null;
+
+        async function init() {
+            showLoading('Loading profile...');
+            try {
+                currentUser = await account.get();
+
+                // Fetch User/Worker data
+                const [workerResponse, userResponse] = await Promise.all([
+                    databases.listDocuments(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.workers, [Query.equal('userId', currentUser.$id)]),
+                    databases.listDocuments(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.users, [Query.equal('userId', currentUser.$id)])
+                ]);
+
+                if (userResponse.documents.length > 0) {
+                    userData = userResponse.documents[0];
+                    document.getElementById('userNameInput').value = userData.name;
+                    document.getElementById('userEmailInput').value = currentUser.email;
+                    document.getElementById('userPhoneInput').value = userData.phone;
+                }
+
+                if (workerResponse.documents.length > 0) {
+                    workerData = workerResponse.documents[0];
+                    document.getElementById('skillCategory').value = workerData.skillCategory;
+                    document.getElementById('experienceInput').value = workerData.experience;
+                    document.getElementById('chargesInput').value = workerData.charges;
+                    document.getElementById('serviceAreaInput').value = workerData.serviceArea ? workerData.serviceArea.join(', ') : '';
+
+                    // Load Payment Settings
+                    document.getElementById('upiIdInput').value = workerData.upiId || '';
+                    if (workerData.qrCodeFileId && workerData.qrCodeFileId !== '') {
+                        loadQRPreview(workerData.qrCodeFileId);
+                    }
+
+                    // Update Status
+                    const badge = document.getElementById('statusBadge');
+                    const text = document.getElementById('approvalText');
+                    if (workerData.isApproved) {
+                        badge.textContent = 'APPROVED';
+                        badge.className = 'badge badge-success';
+                        text.textContent = 'Your profile is public and you can receive jobs.';
+                    } else {
+                        badge.textContent = 'PENDING';
+                        badge.className = 'badge badge-warning';
+                        text.textContent = 'Awaiting admin approval. You will be notified soon.';
+                    }
+                }
+
+            } catch (err) {
+                console.error(err);
+                showAlert('Failed to load profile', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function loadQRPreview(fileId) {
+            if (!fileId || fileId === '') return;
+            try {
+                const url = storage.getFilePreview(APPWRITE_CONFIG.buckets.qrCodes, fileId);
+                const img = document.getElementById('qrPreviewImg');
+                const placeholder = document.getElementById('qrUploadPlaceholder');
+                const removeBtn = document.getElementById('removeQrBtn');
+
+                img.onerror = () => {
+                    console.warn('QR image failed to load');
+                    img.classList.add('hidden');
+                    placeholder.classList.remove('hidden');
+                    removeBtn.classList.add('hidden');
+                };
+
+                img.src = url;
+                img.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+                removeBtn.classList.remove('hidden');
+            } catch (e) {
+                console.warn('QR Preview error', e);
+            }
+        }
+
+        window.savePersonalDetails = async () => {
+            const name = document.getElementById('userNameInput').value.trim();
+            const email = document.getElementById('userEmailInput').value.trim();
+
+            if (!name) return showAlert('Name is required', 'error');
+
+            showLoading('Updating details...');
+            try {
+                const promises = [
+                    databases.updateDocument(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.users, userData.$id, { name })
+                ];
+
+                if (email !== currentUser.email) {
+                    promises.push(account.updateEmail(email, prompt('Please enter your password to change email:')));
+                }
+
+                await Promise.all(promises);
+                showAlert('Personal details updated!', 'success');
+            } catch (e) {
+                console.error(e);
+                showAlert(e.message || 'Failed to update details', 'error');
+            }
+            finally { hideLoading(); }
+        }
+
+        window.saveProfessionalDetails = async () => {
+            const skillCategory = document.getElementById('skillCategory').value;
+            const experience = parseInt(document.getElementById('experienceInput').value);
+            const charges = parseInt(document.getElementById('chargesInput').value);
+            const serviceAreaRaw = document.getElementById('serviceAreaInput').value;
+            const serviceArea = serviceAreaRaw.split(',').map(p => p.trim()).filter(p => p.length > 0);
+
+            showLoading('Updating profile...');
+            try {
+                await databases.updateDocument(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.workers, workerData.$id, {
+                    skillCategory, experience, charges, serviceArea
+                });
+                showAlert('Professional details updated!', 'success');
+            } catch (e) { showAlert('Failed to update profile', 'error'); }
+            finally { hideLoading(); }
+        }
+
+        // --- Migrated Payment JS ---
+        document.getElementById('qrUploadArea').addEventListener('click', () => document.getElementById('qrFileInput').click());
+        document.getElementById('qrFileInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            document.getElementById('qrFileName').textContent = `Selected: ${file.name}`;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const img = document.getElementById('qrPreviewImg');
+                img.src = ev.target.result;
+                img.classList.remove('hidden');
+                document.getElementById('qrUploadPlaceholder').classList.add('hidden');
+            };
+            reader.readAsDataURL(file);
+        });
+
+        window.savePaymentSettings = async () => {
+            const upiId = document.getElementById('upiIdInput').value.trim();
+            const fileInput = document.getElementById('qrFileInput');
+            const file = fileInput.files[0];
+
+            showLoading('Saving payment settings...');
+            try {
+                const updates = { upiId };
+                if (file) {
+                    if (workerData.qrCodeFileId) await storage.deleteFile(APPWRITE_CONFIG.buckets.qrCodes, workerData.qrCodeFileId).catch(() => { });
+                    const uploaded = await storage.createFile(APPWRITE_CONFIG.buckets.qrCodes, ID.unique(), file);
+                    updates.qrCodeFileId = uploaded.$id;
+                    workerData.qrCodeFileId = uploaded.$id;
+                }
+                await databases.updateDocument(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.workers, workerData.$id, updates);
+                showAlert('Payment settings saved!', 'success');
+                document.getElementById('removeQrBtn').classList.toggle('hidden', !workerData.qrCodeFileId);
+            } catch (e) { showAlert('Failed to save payment settings', 'error'); }
+            finally { hideLoading(); }
+        }
+
+        window.removeQrCode = async () => {
+            if (!confirm('Remove QR image?')) return;
+            showLoading('Removing...');
+            try {
+                await storage.deleteFile(APPWRITE_CONFIG.buckets.qrCodes, workerData.qrCodeFileId);
+                await databases.updateDocument(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.workers, workerData.$id, { qrCodeFileId: null });
+                workerData.qrCodeFileId = null;
+                document.getElementById('qrPreviewImg').classList.add('hidden');
+                document.getElementById('qrUploadPlaceholder').classList.remove('hidden');
+                document.getElementById('removeQrBtn').classList.add('hidden');
+                showAlert('QR removed', 'success');
+            } catch (e) { showAlert('Error removing QR', 'error'); }
+            finally { hideLoading(); }
+        }
+
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+        init();
+    </script>
+</body>
+
+</html>

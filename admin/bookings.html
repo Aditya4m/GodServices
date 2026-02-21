@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Management - GOD Services Admin</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container flex-between">
+            <div class="navbar-brand">GOD SERVICES - ADMIN</div>
+            <ul class="navbar-nav">
+                <li><a href="/admin/dashboard.html" class="nav-link">Dashboard</a></li>
+                <li><a href="/admin/workers.html" class="nav-link">Workers</a></li>
+                <li><a href="/admin/customers.html" class="nav-link">Customers</a></li>
+                <li><a href="/admin/bookings.html" class="nav-link active">Bookings</a></li>
+                <li><a href="/admin/services.html" class="nav-link">Services</a></li>
+                <li><a href="/admin/analytics.html" class="nav-link">Analytics</a></li>
+                <li><button class="btn btn-ghost btn-sm" id="logoutBtn">Logout</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container" style="padding: var(--spacing-xl) var(--spacing-md);">
+
+        <!-- Header -->
+        <section class="page-header flex-between">
+            <div>
+                <h1>Booking Management</h1>
+                <p class="text-secondary">Track and manage all platform bookings</p>
+            </div>
+        </section>
+
+        <!-- Stats -->
+        <section class="stats-section grid grid-4 gap-md mt-lg">
+            <div class="stat-card">
+                <div class="stat-value" id="totalBookings">0</div>
+                <div class="stat-label">Total Bookings</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="pendingCount">0</div>
+                <div class="stat-label">Pending</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="activeCount">0</div>
+                <div class="stat-label">Active</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="completedCount">0</div>
+                <div class="stat-label">Completed</div>
+            </div>
+        </section>
+
+        <!-- Tabs -->
+        <section class="tabs-section mt-xl">
+            <h2>All Bookings</h2>
+            <div class="tabs mt-md">
+                <button class="tab-btn active" data-tab="all">All (<span id="tabAll">0</span>)</button>
+                <button class="tab-btn" data-tab="pending">Pending (<span id="tabPending">0</span>)</button>
+                <button class="tab-btn" data-tab="accepted">Accepted (<span id="tabAccepted">0</span>)</button>
+                <button class="tab-btn" data-tab="completed">Completed (<span id="tabCompleted">0</span>)</button>
+                <button class="tab-btn" data-tab="cancelled">Cancelled (<span id="tabCancelled">0</span>)</button>
+            </div>
+        </section>
+
+        <!-- Bookings List -->
+        <section class="bookings-list mt-md">
+            <div id="bookingsContainer">
+                <!-- Bookings loaded dynamically -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Update Status Modal -->
+    <div class="modal-overlay" id="statusModal">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Update Booking Status</h3>
+                <button class="modal-close" onclick="closeStatusModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">New Status</label>
+                    <select id="newStatus" class="form-select">
+                        <option value="pending">Pending</option>
+                        <option value="accepted">Accepted</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary btn-block" onclick="saveStatus()">Update Status</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .page-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .tabs-section {
+            margin-top: var(--spacing-xxl);
+        }
+
+        .tabs-section h2 {
+            margin-bottom: var(--spacing-lg);
+            padding-bottom: var(--spacing-sm);
+            border-bottom: 2px solid var(--color-border);
+        }
+
+        .tabs {
+            display: flex;
+            gap: var(--spacing-sm);
+            border-bottom: 2px solid var(--color-border);
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            font-family: var(--font-display);
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: transparent;
+            border: none;
+            color: var(--color-text-secondary);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            position: relative;
+        }
+
+        .tab-btn::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--color-accent-primary);
+            transition: width var(--transition-normal);
+        }
+
+        .tab-btn:hover,
+        .tab-btn.active {
+            color: var(--color-accent-primary);
+        }
+
+        .tab-btn.active::after {
+            width: 100%;
+        }
+
+        .booking-card {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-left: 4px solid var(--color-accent-primary);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-md);
+            transition: all var(--transition-fast);
+        }
+
+        .booking-card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .booking-card[data-status="pending"] {
+            border-left-color: var(--color-warning);
+        }
+
+        .booking-card[data-status="accepted"] {
+            border-left-color: var(--color-info);
+        }
+
+        .booking-card[data-status="completed"] {
+            border-left-color: var(--color-success);
+        }
+
+        .booking-card[data-status="cancelled"] {
+            border-left-color: var(--color-error);
+        }
+
+        .booking-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .booking-info h3 {
+            font-size: 1.4rem;
+            color: var(--color-text-primary);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .booking-id {
+            font-size: 0.8rem;
+            color: var(--color-text-muted);
+            font-family: var(--font-display);
+            letter-spacing: 0.05em;
+        }
+
+        .booking-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+            padding: var(--spacing-md) 0;
+            border-top: 1px solid var(--color-border);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .detail-item {
+            font-size: 0.9rem;
+        }
+
+        .detail-item strong {
+            color: var(--color-text-secondary);
+            display: block;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .detail-item span {
+            color: var(--color-text-primary);
+        }
+
+        .booking-problem {
+            padding: var(--spacing-sm);
+            background: var(--color-bg-elevated);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--spacing-md);
+            font-size: 0.9rem;
+            color: var(--color-text-secondary);
+        }
+
+        .booking-problem strong {
+            color: var(--color-text-primary);
+        }
+
+        .booking-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+            flex-wrap: wrap;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: var(--spacing-xl);
+            color: var(--color-text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: var(--spacing-md);
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .navbar-nav {
+                display: none;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .booking-details {
+                grid-template-columns: 1fr;
+            }
+
+            .booking-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+
+    <script type="module">
+        import { account, databases, APPWRITE_CONFIG, showLoading, hideLoading, showAlert, logout } from '/js/appwrite.js';
+        import { Query } from 'https://cdn.jsdelivr.net/npm/appwrite@14.0.1/+esm';
+
+        let currentUser = null;
+        let allBookings = [];
+        let allUsers = [];
+        let allWorkers = [];
+        let currentTab = 'all';
+        let editingBookingId = null;
+
+        async function init() {
+            showLoading('Loading bookings...');
+
+            try {
+                currentUser = await account.get();
+
+                // Verify admin (with fallback)
+                let isAdmin = false;
+                try {
+                    const userResponse = await databases.listDocuments(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.users,
+                        [Query.equal('userId', currentUser.$id)]
+                    );
+                    isAdmin = userResponse.documents.length > 0 && userResponse.documents[0].role === 'admin';
+                } catch (queryError) {
+                    console.warn('userId query failed, using fallback:', queryError);
+                    const allUsersRes = await databases.listDocuments(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.users
+                    );
+                    const adminUser = allUsersRes.documents.find(u => u.userId === currentUser.$id);
+                    isAdmin = adminUser && adminUser.role === 'admin';
+                }
+
+                if (!isAdmin) {
+                    showAlert('Unauthorized access. Admin only.', 'error');
+                    setTimeout(() => { window.location.href = '/index.html'; }, 2000);
+                    return;
+                }
+
+                // Check URL params for customer filter
+                const urlParams = new URLSearchParams(window.location.search);
+                const customerFilter = urlParams.get('customer');
+
+                // Load all data (each with its own error handling)
+                try {
+                    const bookingsRes = await databases.listDocuments(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.bookings);
+                    allBookings = bookingsRes.documents;
+                } catch (e) { console.warn('Could not load bookings:', e); }
+
+                try {
+                    const usersRes = await databases.listDocuments(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.users);
+                    allUsers = usersRes.documents;
+                } catch (e) { console.warn('Could not load users:', e); }
+
+                try {
+                    const workersRes = await databases.listDocuments(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.workers);
+                    allWorkers = workersRes.documents;
+                } catch (e) { console.warn('Could not load workers:', e); }
+
+                // Apply customer filter from URL
+                if (customerFilter) {
+                    allBookings = allBookings.filter(b => b.customerId === customerFilter);
+                    const customerUser = allUsers.find(u => u.userId === customerFilter);
+                    if (customerUser) {
+                        document.querySelector('.page-header p').textContent =
+                            `Showing bookings for ${customerUser.name}`;
+                    }
+                }
+
+                updateStats();
+                updateTabCounts();
+                displayBookings();
+
+            } catch (error) {
+                console.error('Initialization error:', error);
+                showAlert('Failed to load bookings.', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('totalBookings').textContent = allBookings.length;
+            document.getElementById('pendingCount').textContent = allBookings.filter(b => b.status === 'pending').length;
+            document.getElementById('activeCount').textContent = allBookings.filter(b => ['accepted', 'in-progress'].includes(b.status)).length;
+            document.getElementById('completedCount').textContent = allBookings.filter(b => b.status === 'completed').length;
+        }
+
+        function updateTabCounts() {
+            document.getElementById('tabAll').textContent = allBookings.length;
+            document.getElementById('tabPending').textContent = allBookings.filter(b => b.status === 'pending').length;
+            document.getElementById('tabAccepted').textContent = allBookings.filter(b => ['accepted', 'in-progress'].includes(b.status)).length;
+            document.getElementById('tabCompleted').textContent = allBookings.filter(b => b.status === 'completed').length;
+            document.getElementById('tabCancelled').textContent = allBookings.filter(b => b.status === 'cancelled').length;
+        }
+
+        function displayBookings() {
+            const container = document.getElementById('bookingsContainer');
+
+            let filtered = allBookings;
+
+            if (currentTab === 'pending') {
+                filtered = allBookings.filter(b => b.status === 'pending');
+            } else if (currentTab === 'accepted') {
+                filtered = allBookings.filter(b => ['accepted', 'in-progress'].includes(b.status));
+            } else if (currentTab === 'completed') {
+                filtered = allBookings.filter(b => b.status === 'completed');
+            } else if (currentTab === 'cancelled') {
+                filtered = allBookings.filter(b => b.status === 'cancelled');
+            }
+
+            // Sort by newest first
+            filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <p>No bookings found in this category</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+
+            filtered.forEach(booking => {
+                const customerUser = allUsers.find(u => u.userId === booking.customerId);
+                const worker = allWorkers.find(w => w.$id === booking.workerId);
+                const workerUser = worker ? allUsers.find(u => u.userId === worker.userId) : null;
+
+                const statusColors = {
+                    pending: 'warning',
+                    accepted: 'info',
+                    'in-progress': 'info',
+                    completed: 'success',
+                    cancelled: 'error'
+                };
+
+                const card = document.createElement('div');
+                card.className = 'booking-card';
+                card.setAttribute('data-status', booking.status);
+                card.innerHTML = `
+                    <div class="booking-header">
+                        <div class="booking-info">
+                            <h3>${(booking.serviceCategory || 'Service').replace('-', ' ').toUpperCase()}</h3>
+                            <div class="booking-id">ID: ${booking.$id.substring(0, 12)}</div>
+                        </div>
+                        <span class="badge badge-${statusColors[booking.status] || 'info'}">${booking.status}</span>
+                    </div>
+
+                    <div class="booking-details">
+                        <div class="detail-item">
+                            <strong>Customer:</strong>
+                            <span>${customerUser ? customerUser.name : booking.customerId?.substring(0, 8) || 'N/A'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Worker:</strong>
+                            <span>${workerUser ? workerUser.name : (worker ? 'Worker #' + worker.$id.substring(0, 8) : 'Unassigned')}</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Location:</strong>
+                            <span>${booking.location || 'N/A'}, ${booking.pincode || ''}</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Scheduled:</strong>
+                            <span>${booking.scheduledTime ? new Date(booking.scheduledTime).toLocaleString() : 'Not set'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Price:</strong>
+                            <span>₹${booking.estimatedPrice || 0}</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Created:</strong>
+                            <span>${new Date(booking.createdAt).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+
+                    ${booking.problemDescription ? `
+                    <div class="booking-problem">
+                        <strong>Problem: </strong>${booking.problemDescription}
+                    </div>` : ''}
+
+                    <div class="booking-actions">
+                        ${booking.status === 'pending' ? `
+                            <button class="btn btn-primary btn-sm" onclick="quickUpdate('${booking.$id}', 'accepted')">Accept</button>
+                            <button class="btn btn-secondary btn-sm" onclick="quickUpdate('${booking.$id}', 'cancelled')">Cancel</button>
+                        ` : ''}
+                        ${booking.status === 'accepted' ? `
+                            <button class="btn btn-primary btn-sm" onclick="quickUpdate('${booking.$id}', 'completed')">Mark Completed</button>
+                        ` : ''}
+                        <button class="btn btn-ghost btn-sm" onclick="openStatusModal('${booking.$id}', '${booking.status}')">Change Status</button>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentTab = btn.dataset.tab;
+                displayBookings();
+            });
+        });
+
+        // Quick status update
+        window.quickUpdate = async function (bookingId, newStatus) {
+            showLoading('Updating booking...');
+            try {
+                await databases.updateDocument(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.bookings,
+                    bookingId,
+                    { status: newStatus, updatedAt: new Date().toISOString() }
+                );
+
+                // Refresh local data
+                const idx = allBookings.findIndex(b => b.$id === bookingId);
+                if (idx !== -1) allBookings[idx].status = newStatus;
+
+                updateStats();
+                updateTabCounts();
+                displayBookings();
+                showAlert(`Booking ${newStatus} successfully!`, 'success');
+            } catch (error) {
+                console.error('Error updating booking:', error);
+                showAlert('Failed to update booking', 'error');
+            } finally {
+                hideLoading();
+            }
+        };
+
+        // Status modal
+        window.openStatusModal = function (bookingId, currentStatus) {
+            editingBookingId = bookingId;
+            document.getElementById('newStatus').value = currentStatus;
+            document.getElementById('statusModal').classList.add('active');
+        };
+
+        window.closeStatusModal = function () {
+            document.getElementById('statusModal').classList.remove('active');
+            editingBookingId = null;
+        };
+
+        window.saveStatus = async function () {
+            if (!editingBookingId) return;
+            const newStatus = document.getElementById('newStatus').value;
+            closeStatusModal();
+            await quickUpdate(editingBookingId, newStatus);
+        };
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+
+        init();
+    </script>
+
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+        <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <svg id="moon-icon" class="hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+    </button>
+
+    <script type="module">
+        import { toggleTheme, initTheme } from '/js/theme.js';
+        window.toggleTheme = toggleTheme;
+        initTheme();
+    </script>
+
+</body>
+
+</html>

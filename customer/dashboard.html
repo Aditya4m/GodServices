@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Dashboard - GOD Services</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container flex-between">
+            <div class="navbar-brand">GOD SERVICES</div>
+            <ul class="navbar-nav">
+                <li><a href="/customer/dashboard.html" class="nav-link active">Dashboard</a></li>
+                <li><a href="/customer/services.html" class="nav-link">Services</a></li>
+                <li><a href="/customer/history.html" class="nav-link">My Bookings</a></li>
+                <li><a href="/customer/profile.html" class="nav-link">Profile</a></li>
+                <li><button class="btn btn-ghost btn-sm" id="logoutBtn">Logout</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container" style="padding: var(--spacing-xl) var(--spacing-md);">
+
+        <!-- Welcome Section -->
+        <section class="welcome-section">
+            <h1>Welcome, <span id="userName">Customer</span></h1>
+            <p class="text-secondary">Find and book trusted service workers in your area</p>
+        </section>
+
+        <!-- Quick Stats -->
+        <section class="stats-section grid grid-4 gap-md mt-lg">
+            <div class="stat-card">
+                <div class="stat-value" id="totalBookings">0</div>
+                <div class="stat-label">Total Bookings</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="activeBookings">0</div>
+                <div class="stat-label">Active</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="completedBookings">0</div>
+                <div class="stat-label">Completed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="pendingBookings">0</div>
+                <div class="stat-label">Pending</div>
+            </div>
+        </section>
+
+        <!-- Service Categories -->
+        <section class="services-section mt-xl">
+            <h2>Browse Services</h2>
+            <div class="grid grid-4 gap-md mt-md" id="servicesGrid">
+                <!-- Services will be loaded dynamically -->
+            </div>
+        </section>
+
+        <!-- Recent Bookings -->
+        <section class="bookings-section mt-xl">
+            <div class="flex-between mb-md">
+                <h2>Recent Bookings</h2>
+                <a href="/customer/history.html" class="btn btn-ghost btn-sm">View All</a>
+            </div>
+            <div id="recentBookings">
+                <!-- Bookings will be loaded dynamically -->
+            </div>
+        </section>
+
+    </main>
+
+    <style>
+        .welcome-section {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .welcome-section h1 {
+            font-size: 2.5rem;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .welcome-section h1 span {
+            color: var(--color-accent-primary);
+        }
+
+        .services-section {
+            margin-top: var(--spacing-xxl);
+        }
+
+        .bookings-section {
+            margin-top: var(--spacing-xxl);
+        }
+
+        .service-card {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+        }
+
+        .service-card:hover {
+            border-color: var(--color-accent-primary);
+            box-shadow: var(--glow-orange);
+            transform: translateY(-4px);
+        }
+
+        .service-icon {
+            font-size: 3rem;
+            margin-bottom: var(--spacing-md);
+            filter: grayscale(1);
+            transition: filter var(--transition-normal);
+        }
+
+        .service-card:hover .service-icon {
+            filter: grayscale(0);
+        }
+
+        .service-name {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            margin-bottom: var(--spacing-xs);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .service-description {
+            color: var(--color-text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .booking-card {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-sm);
+            transition: all var(--transition-fast);
+        }
+
+        .booking-card:hover {
+            border-color: var(--color-accent-primary);
+        }
+
+        .booking-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .booking-service {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            text-transform: uppercase;
+        }
+
+        .booking-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--spacing-sm);
+            font-size: 0.9rem;
+        }
+
+        .booking-info-item {
+            color: var(--color-text-secondary);
+        }
+
+        .booking-info-item strong {
+            color: var(--color-text-primary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: var(--spacing-xl);
+            color: var(--color-text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: var(--spacing-md);
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .navbar-nav {
+                display: none;
+            }
+
+            .booking-info {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <script type="module">
+        import { account, databases, APPWRITE_CONFIG, showLoading, hideLoading, showAlert, logout } from '/js/appwrite.js';
+        import { Query } from 'https://cdn.jsdelivr.net/npm/appwrite@14.0.1/+esm';
+
+        let currentUser = null;
+        let customerData = null;
+
+        // Service categories with icons
+        const serviceCategories = [
+            { id: 'plumber', name: 'Plumber', icon: '🔧', description: 'Pipe repairs, installations' },
+            { id: 'electrician', name: 'Electrician', icon: '⚡', description: 'Wiring, fixtures, repairs' },
+            { id: 'ac-technician', name: 'AC Technician', icon: '❄️', description: 'AC repair & maintenance' },
+            { id: 'carpenter', name: 'Carpenter', icon: '🪚', description: 'Furniture, woodwork' },
+            { id: 'painter', name: 'Painter', icon: '🎨', description: 'Interior & exterior painting' },
+            { id: 'cleaner', name: 'Cleaner', icon: '🧹', description: 'Home & office cleaning' },
+            { id: 'gardener', name: 'Gardener', icon: '🌱', description: 'Garden maintenance' },
+            { id: 'mechanic', name: 'Mechanic', icon: '🔩', description: 'Vehicle repairs' }
+        ];
+
+        // Initialize
+        async function init() {
+            showLoading('Loading dashboard...');
+
+            try {
+                // Get current user - check authentication
+                try {
+                    currentUser = await account.get();
+                } catch (authError) {
+                    console.error('Authentication error:', authError);
+                    // User not logged in, redirect to login
+                    if (authError.code === 401 || authError.message.includes('guests')) {
+                        showAlert('Please login to continue', 'error');
+                        setTimeout(() => {
+                            window.location.href = '/login.html';
+                        }, 1500);
+                        return;
+                    }
+                    throw authError;
+                }
+
+                // Get customer data
+                try {
+                    const customerResponse = await databases.listDocuments(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.customers,
+                        [Query.equal('userId', currentUser.$id)]
+                    );
+
+                    if (customerResponse.documents.length > 0) {
+                        customerData = customerResponse.documents[0];
+                    }
+                } catch (queryError) {
+                    // Fallback: if userId is not indexed, fetch all and filter client-side
+                    console.warn('userId not indexed, using fallback method:', queryError);
+                    const allCustomers = await databases.listDocuments(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.customers
+                    );
+                    customerData = allCustomers.documents.find(c => c.userId === currentUser.$id);
+                }
+
+                // Get user data for name
+                try {
+                    const userResponse = await databases.listDocuments(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.users,
+                        [Query.equal('userId', currentUser.$id)]
+                    );
+
+                    if (userResponse.documents.length > 0) {
+                        document.getElementById('userName').textContent = userResponse.documents[0].name;
+                    }
+                } catch (queryError) {
+                    // Fallback for users collection
+                    console.warn('userId not indexed in users, using fallback:', queryError);
+                    const allUsers = await databases.listDocuments(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.users
+                    );
+                    const userData = allUsers.documents.find(u => u.userId === currentUser.$id);
+                    if (userData) {
+                        document.getElementById('userName').textContent = userData.name;
+                    }
+                }
+
+                // Load data
+                await Promise.all([
+                    loadBookingStats(),
+                    loadServices(),
+                    loadRecentBookings()
+                ]);
+
+            } catch (error) {
+                console.error('Initialization error:', error);
+                showAlert(`Failed to load dashboard: ${error.message}`, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Load booking statistics
+        async function loadBookingStats() {
+            try {
+                let bookings = [];
+
+                try {
+                    const bookingsResponse = await databases.listDocuments(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.bookings,
+                        [Query.equal('customerId', currentUser.$id)]
+                    );
+                    bookings = bookingsResponse.documents;
+                } catch (queryError) {
+                    // Fallback: fetch all bookings and filter client-side
+                    console.warn('customerId not indexed, using fallback:', queryError);
+                    const allBookings = await databases.listDocuments(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.bookings
+                    );
+                    bookings = allBookings.documents.filter(b => b.customerId === currentUser.$id);
+                }
+
+                document.getElementById('totalBookings').textContent = bookings.length;
+                document.getElementById('activeBookings').textContent = bookings.filter(b => b.status === 'accepted').length;
+                document.getElementById('completedBookings').textContent = bookings.filter(b => b.status === 'completed').length;
+                document.getElementById('pendingBookings').textContent = bookings.filter(b => b.status === 'pending').length;
+
+            } catch (error) {
+                console.error('Error loading booking stats:', error);
+            }
+        }
+
+        // Load service categories
+        function loadServices() {
+            const servicesGrid = document.getElementById('servicesGrid');
+            servicesGrid.innerHTML = '';
+
+            serviceCategories.forEach(service => {
+                const serviceCard = document.createElement('div');
+                serviceCard.className = 'service-card';
+                serviceCard.innerHTML = `
+          <div class="service-icon">${service.icon}</div>
+          <div class="service-name">${service.name}</div>
+          <div class="service-description">${service.description}</div>
+        `;
+                serviceCard.addEventListener('click', () => {
+                    window.location.href = `/customer/services.html?category=${service.id}`;
+                });
+                servicesGrid.appendChild(serviceCard);
+            });
+        }
+
+        // Load recent bookings
+        async function loadRecentBookings() {
+            try {
+                const bookingsResponse = await databases.listDocuments(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.bookings,
+                    [
+                        Query.equal('customerId', currentUser.$id),
+                        Query.orderDesc('createdAt'),
+                        Query.limit(5)
+                    ]
+                );
+
+                const bookings = bookingsResponse.documents;
+                const container = document.getElementById('recentBookings');
+
+                if (bookings.length === 0) {
+                    container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">📋</div>
+              <p>No bookings yet. Browse services to get started!</p>
+              <a href="/customer/services.html" class="btn btn-primary mt-md">Browse Services</a>
+            </div>
+          `;
+                    return;
+                }
+
+                container.innerHTML = '';
+
+                bookings.forEach(booking => {
+                    const bookingCard = document.createElement('div');
+                    bookingCard.className = 'booking-card';
+
+                    const statusColors = {
+                        pending: 'warning',
+                        accepted: 'info',
+                        completed: 'success',
+                        cancelled: 'error'
+                    };
+
+                    bookingCard.innerHTML = `
+            <div class="booking-header">
+              <div class="booking-service">${booking.serviceCategory}</div>
+              <span class="badge badge-${statusColors[booking.status]}">${booking.status}</span>
+            </div>
+            <div class="booking-info">
+              <div class="booking-info-item">
+                <strong>Location:</strong> ${booking.location}
+              </div>
+              <div class="booking-info-item">
+                <strong>Date:</strong> ${new Date(booking.createdAt).toLocaleDateString()}
+              </div>
+              <div class="booking-info-item">
+                <strong>Price:</strong> ₹${booking.estimatedPrice}
+              </div>
+              <div class="booking-info-item">
+                <strong>Payment:</strong> ${booking.paymentStatus || 'Pending'}
+              </div>
+            </div>
+          `;
+
+                    container.appendChild(bookingCard);
+                });
+
+            } catch (error) {
+                console.error('Error loading recent bookings:', error);
+            }
+        }
+
+        // Logout handler
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+
+        // Initialize on page load
+        init();
+    </script>
+
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+        <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <svg id="moon-icon" class="hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+    </button>
+
+    <script type="module">
+        import { toggleTheme, initTheme } from '/js/theme.js';
+        window.toggleTheme = toggleTheme;
+        initTheme();
+    </script>
+
+</body>
+
+</html>

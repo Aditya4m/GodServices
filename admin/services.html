@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Management - GOD Services Admin</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container flex-between">
+            <div class="navbar-brand">GOD SERVICES - ADMIN</div>
+            <ul class="navbar-nav">
+                <li><a href="/admin/dashboard.html" class="nav-link">Dashboard</a></li>
+                <li><a href="/admin/workers.html" class="nav-link">Workers</a></li>
+                <li><a href="/admin/customers.html" class="nav-link">Customers</a></li>
+                <li><a href="/admin/bookings.html" class="nav-link">Bookings</a></li>
+                <li><a href="/admin/services.html" class="nav-link active">Services</a></li>
+                <li><a href="/admin/analytics.html" class="nav-link">Analytics</a></li>
+                <li><button class="btn btn-ghost btn-sm" id="logoutBtn">Logout</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container" style="padding: var(--spacing-xl) var(--spacing-md);">
+
+        <!-- Header -->
+        <section class="page-header flex-between">
+            <div>
+                <h1>Service Management</h1>
+                <p class="text-secondary">Manage service categories and offerings</p>
+            </div>
+            <button class="btn btn-primary" onclick="openAddModal()">+ Add Service</button>
+        </section>
+
+        <!-- Stats -->
+        <section class="stats-section grid grid-3 gap-md mt-lg">
+            <div class="stat-card">
+                <div class="stat-value" id="totalServices">0</div>
+                <div class="stat-label">Total Services</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalServiceWorkers">0</div>
+                <div class="stat-label">Total Workers</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalServiceBookings">0</div>
+                <div class="stat-label">Total Bookings</div>
+            </div>
+        </section>
+
+        <!-- Services Grid -->
+        <section class="services-section mt-xl">
+            <h2>All Service Categories</h2>
+            <div class="grid grid-3 gap-md mt-md" id="servicesGrid">
+                <!-- Services loaded dynamically -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Add/Edit Service Modal -->
+    <div class="modal-overlay" id="serviceModal">
+        <div class="modal" style="max-width: 550px;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Add Service</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="serviceForm">
+                    <div class="form-group">
+                        <label class="form-label">Service Name</label>
+                        <input type="text" id="serviceName" class="form-input" placeholder="e.g., Plumber" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Category ID</label>
+                        <input type="text" id="serviceId" class="form-input"
+                            placeholder="e.g., plumber (lowercase, no spaces)" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Icon (Emoji)</label>
+                        <input type="text" id="serviceIcon" class="form-input" placeholder="e.g., 🔧" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea id="serviceDescription" class="form-textarea"
+                            placeholder="Brief description of the service" rows="3" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Base Price (₹)</label>
+                        <input type="number" id="servicePrice" class="form-input" placeholder="e.g., 300" min="0"
+                            required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Save Service</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .page-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .services-section {
+            margin-top: var(--spacing-xxl);
+        }
+
+        .services-section h2 {
+            margin-bottom: var(--spacing-lg);
+            padding-bottom: var(--spacing-sm);
+            border-bottom: 2px solid var(--color-border);
+        }
+
+        .service-manage-card {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            text-align: center;
+            transition: all var(--transition-normal);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .service-manage-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--color-accent-primary), transparent);
+            opacity: 0;
+            transition: opacity var(--transition-normal);
+        }
+
+        .service-manage-card:hover {
+            border-color: var(--color-accent-primary);
+            box-shadow: var(--shadow-lg), var(--glow-orange);
+            transform: translateY(-4px);
+        }
+
+        .service-manage-card:hover::before {
+            opacity: 1;
+        }
+
+        .service-emoji {
+            font-size: 3.5rem;
+            margin-bottom: var(--spacing-md);
+            filter: grayscale(1);
+            transition: filter var(--transition-normal);
+        }
+
+        .service-manage-card:hover .service-emoji {
+            filter: grayscale(0);
+        }
+
+        .service-title {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--color-text-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .service-desc {
+            color: var(--color-text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .service-meta {
+            display: flex;
+            justify-content: space-around;
+            padding: var(--spacing-sm) 0;
+            border-top: 1px solid var(--color-border);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .meta-item {
+            text-align: center;
+        }
+
+        .meta-value {
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--color-accent-primary);
+        }
+
+        .meta-label {
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .service-card-actions {
+            display: flex;
+            gap: var(--spacing-xs);
+            justify-content: center;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: var(--spacing-xl);
+            color: var(--color-text-muted);
+            grid-column: 1 / -1;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: var(--spacing-md);
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .navbar-nav {
+                display: none;
+            }
+
+            .page-header {
+                flex-direction: column;
+                gap: var(--spacing-md);
+            }
+        }
+    </style>
+
+    <script type="module">
+        import { account, databases, APPWRITE_CONFIG, showLoading, hideLoading, showAlert, logout } from '/js/appwrite.js';
+        import { Query, ID } from 'https://cdn.jsdelivr.net/npm/appwrite@14.0.1/+esm';
+
+        let currentUser = null;
+        let allWorkers = [];
+        let allBookings = [];
+        let editingServiceId = null;
+
+        // Default service categories (fallback)
+        const defaultCategories = [
+            { id: 'plumber', name: 'Plumber', icon: '🔧', description: 'Pipe repairs, installations & maintenance', basePrice: 300 },
+            { id: 'electrician', name: 'Electrician', icon: '⚡', description: 'Wiring, fixtures & electrical repairs', basePrice: 350 },
+            { id: 'ac-technician', name: 'AC Technician', icon: '❄️', description: 'AC repair, installation & servicing', basePrice: 500 },
+            { id: 'carpenter', name: 'Carpenter', icon: '🪚', description: 'Furniture repair & custom woodwork', basePrice: 400 },
+            { id: 'painter', name: 'Painter', icon: '🎨', description: 'Interior & exterior painting', basePrice: 350 },
+            { id: 'cleaner', name: 'Cleaner', icon: '🧹', description: 'Home & office deep cleaning', basePrice: 250 },
+            { id: 'gardener', name: 'Gardener', icon: '🌱', description: 'Garden maintenance & landscaping', basePrice: 200 },
+            { id: 'mechanic', name: 'Mechanic', icon: '🔩', description: 'Vehicle repair & maintenance', basePrice: 450 }
+        ];
+
+        let serviceList = [];
+
+        async function init() {
+            showLoading('Loading services...');
+
+            try {
+                currentUser = await account.get();
+
+                // Verify admin (with fallback)
+                let isAdmin = false;
+                try {
+                    const userResponse = await databases.listDocuments(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.users,
+                        [Query.equal('userId', currentUser.$id)]
+                    );
+                    isAdmin = userResponse.documents.length > 0 && userResponse.documents[0].role === 'admin';
+                } catch (queryError) {
+                    console.warn('userId query failed, using fallback:', queryError);
+                    const allUsersRes = await databases.listDocuments(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.users
+                    );
+                    const adminUser = allUsersRes.documents.find(u => u.userId === currentUser.$id);
+                    isAdmin = adminUser && adminUser.role === 'admin';
+                }
+
+                if (!isAdmin) {
+                    showAlert('Unauthorized access. Admin only.', 'error');
+                    setTimeout(() => { window.location.href = '/index.html'; }, 2000);
+                    return;
+                }
+
+                // Load data
+                const [workersRes, bookingsRes] = await Promise.all([
+                    databases.listDocuments(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.workers),
+                    databases.listDocuments(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.bookings)
+                ]);
+
+                allWorkers = workersRes.documents;
+                allBookings = bookingsRes.documents;
+
+                // Try to load services from DB, fallback to defaults
+                try {
+                    const servicesRes = await databases.listDocuments(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.services
+                    );
+                    serviceList = servicesRes.documents.length > 0
+                        ? servicesRes.documents.map(s => ({
+                            id: s.categoryId || s.$id,
+                            name: s.name,
+                            icon: s.icon || '⚙️',
+                            description: s.description || '',
+                            basePrice: s.basePrice || 0,
+                            docId: s.$id
+                        }))
+                        : [...defaultCategories];
+                } catch (e) {
+                    console.warn('Services collection not available, using defaults:', e);
+                    serviceList = [...defaultCategories];
+                }
+
+                updateStats();
+                displayServices();
+
+            } catch (error) {
+                console.error('Initialization error:', error);
+                showAlert('Failed to load services.', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('totalServices').textContent = serviceList.length;
+            document.getElementById('totalServiceWorkers').textContent = allWorkers.length;
+            document.getElementById('totalServiceBookings').textContent = allBookings.length;
+        }
+
+        function displayServices() {
+            const grid = document.getElementById('servicesGrid');
+
+            if (serviceList.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚙️</div>
+                        <p>No services configured yet</p>
+                        <button class="btn btn-primary mt-md" onclick="openAddModal()">Add First Service</button>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = '';
+
+            serviceList.forEach(service => {
+                const workerCount = allWorkers.filter(w => w.skillCategory === service.id).length;
+                const bookingCount = allBookings.filter(b => b.serviceCategory === service.id).length;
+                const revenue = allBookings
+                    .filter(b => b.serviceCategory === service.id && b.status === 'completed')
+                    .reduce((sum, b) => sum + (b.estimatedPrice || 0), 0);
+
+                const card = document.createElement('div');
+                card.className = 'service-manage-card';
+                card.innerHTML = `
+                    <div class="service-emoji">${service.icon}</div>
+                    <div class="service-title">${service.name}</div>
+                    <div class="service-desc">${service.description}</div>
+
+                    <div class="service-meta">
+                        <div class="meta-item">
+                            <div class="meta-value">${workerCount}</div>
+                            <div class="meta-label">Workers</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-value">${bookingCount}</div>
+                            <div class="meta-label">Bookings</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-value">₹${revenue.toLocaleString()}</div>
+                            <div class="meta-label">Revenue</div>
+                        </div>
+                    </div>
+
+                    <div class="service-card-actions">
+                        <button class="btn btn-ghost btn-sm" onclick="editService('${service.id}')">Edit</button>
+                        <button class="btn btn-ghost btn-sm" onclick="deleteService('${service.id}')" style="color: var(--color-error);">Delete</button>
+                    </div>
+                `;
+
+                grid.appendChild(card);
+            });
+        }
+
+        // Modal functions
+        window.openAddModal = function () {
+            editingServiceId = null;
+            document.getElementById('modalTitle').textContent = 'Add Service';
+            document.getElementById('serviceForm').reset();
+            document.getElementById('serviceId').disabled = false;
+            document.getElementById('serviceModal').classList.add('active');
+        };
+
+        window.editService = function (serviceId) {
+            const service = serviceList.find(s => s.id === serviceId);
+            if (!service) return;
+
+            editingServiceId = serviceId;
+            document.getElementById('modalTitle').textContent = 'Edit Service';
+            document.getElementById('serviceName').value = service.name;
+            document.getElementById('serviceId').value = service.id;
+            document.getElementById('serviceId').disabled = true;
+            document.getElementById('serviceIcon').value = service.icon;
+            document.getElementById('serviceDescription').value = service.description;
+            document.getElementById('servicePrice').value = service.basePrice;
+            document.getElementById('serviceModal').classList.add('active');
+        };
+
+        window.closeModal = function () {
+            document.getElementById('serviceModal').classList.remove('active');
+            editingServiceId = null;
+        };
+
+        // Save service
+        document.getElementById('serviceForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showLoading('Saving service...');
+
+            const serviceData = {
+                categoryId: document.getElementById('serviceId').value.toLowerCase().trim(),
+                name: document.getElementById('serviceName').value.trim(),
+                icon: document.getElementById('serviceIcon').value.trim(),
+                description: document.getElementById('serviceDescription').value.trim(),
+                basePrice: parseInt(document.getElementById('servicePrice').value) || 0
+            };
+
+            try {
+                if (editingServiceId) {
+                    // Update existing
+                    const existing = serviceList.find(s => s.id === editingServiceId);
+                    if (existing && existing.docId) {
+                        await databases.updateDocument(
+                            APPWRITE_CONFIG.databaseId,
+                            APPWRITE_CONFIG.collections.services,
+                            existing.docId,
+                            serviceData
+                        );
+                    }
+                    // Update local list
+                    const idx = serviceList.findIndex(s => s.id === editingServiceId);
+                    if (idx !== -1) {
+                        serviceList[idx] = { ...serviceList[idx], ...serviceData, id: serviceData.categoryId, name: serviceData.name };
+                    }
+                    showAlert('Service updated!', 'success');
+                } else {
+                    // Create new
+                    try {
+                        const doc = await databases.createDocument(
+                            APPWRITE_CONFIG.databaseId,
+                            APPWRITE_CONFIG.collections.services,
+                            ID.unique(),
+                            serviceData
+                        );
+                        serviceList.push({
+                            id: serviceData.categoryId,
+                            name: serviceData.name,
+                            icon: serviceData.icon,
+                            description: serviceData.description,
+                            basePrice: serviceData.basePrice,
+                            docId: doc.$id
+                        });
+                    } catch (dbError) {
+                        // If DB fails, still add to local list
+                        console.warn('Could not save to DB, adding locally:', dbError);
+                        serviceList.push({
+                            id: serviceData.categoryId,
+                            name: serviceData.name,
+                            icon: serviceData.icon,
+                            description: serviceData.description,
+                            basePrice: serviceData.basePrice
+                        });
+                    }
+                    showAlert('Service added!', 'success');
+                }
+
+                closeModal();
+                updateStats();
+                displayServices();
+            } catch (error) {
+                console.error('Error saving service:', error);
+                showAlert('Failed to save service', 'error');
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // Delete service
+        window.deleteService = async function (serviceId) {
+            if (!confirm(`Delete this service category? This won't affect existing bookings.`)) return;
+
+            showLoading('Deleting service...');
+
+            try {
+                const service = serviceList.find(s => s.id === serviceId);
+                if (service && service.docId) {
+                    await databases.deleteDocument(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.services,
+                        service.docId
+                    );
+                }
+
+                serviceList = serviceList.filter(s => s.id !== serviceId);
+                updateStats();
+                displayServices();
+                showAlert('Service deleted', 'info');
+            } catch (error) {
+                console.error('Error deleting service:', error);
+                // Still remove locally
+                serviceList = serviceList.filter(s => s.id !== serviceId);
+                updateStats();
+                displayServices();
+                showAlert('Service removed locally', 'info');
+            } finally {
+                hideLoading();
+            }
+        };
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+
+        init();
+    </script>
+
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+        <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <svg id="moon-icon" class="hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+    </button>
+
+    <script type="module">
+        import { toggleTheme, initTheme } from '/js/theme.js';
+        window.toggleTheme = toggleTheme;
+        initTheme();
+    </script>
+
+</body>
+
+</html>

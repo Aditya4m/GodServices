@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Jobs - GOD Services</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+    <!-- Header -->
+    <nav class="navbar">
+        <div class="container flex-between">
+            <div class="navbar-brand">GOD SERVICES</div>
+            <div class="navbar-nav">
+                <a href="/worker/dashboard.html" class="nav-link">← Dashboard</a>
+                <button id="logoutBtn" class="btn btn-ghost btn-sm">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container" style="padding: var(--spacing-lg) var(--spacing-md);">
+
+        <!-- Page Header -->
+        <div style="margin-bottom: var(--spacing-lg);">
+            <h1 style="margin-bottom: var(--spacing-xs);">My Jobs</h1>
+            <p style="color: var(--color-text-secondary);">Manage all your bookings and assignments</p>
+        </div>
+
+        <!-- Stats Summary -->
+        <div class="grid grid-4 gap-md" style="margin-bottom: var(--spacing-lg);">
+            <div class="stat-card">
+                <div class="stat-value" id="totalJobs">0</div>
+                <div class="stat-label">Total Jobs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="pendingJobs">0</div>
+                <div class="stat-label">Pending</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="activeJobs">0</div>
+                <div class="stat-label">Active</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="completedJobs">0</div>
+                <div class="stat-label">Completed</div>
+            </div>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div style="margin-bottom: var(--spacing-lg); border-bottom: 2px solid var(--color-border);">
+            <div style="display: flex; gap: var(--spacing-sm); overflow-x: auto;">
+                <button class="filter-tab active" data-status="all">All</button>
+                <button class="filter-tab" data-status="pending">Pending</button>
+                <button class="filter-tab" data-status="accepted">Accepted</button>
+                <button class="filter-tab" data-status="in-progress">In Progress</button>
+                <button class="filter-tab" data-status="completed">Completed</button>
+                <button class="filter-tab" data-status="cancelled">Cancelled</button>
+            </div>
+        </div>
+
+        <!-- Jobs List -->
+        <div id="jobsList"></div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden" style="text-align: center; padding: var(--spacing-xxl) 0;">
+            <div style="font-size: 4rem; margin-bottom: var(--spacing-md); opacity: 1;">📋</div>
+            <h3 style="margin-bottom: var(--spacing-sm);">No Jobs Found</h3>
+            <p style="color: var(--color-text-secondary);">You don't have any jobs matching this filter.</p>
+        </div>
+
+    </div>
+
+    <style>
+        .filter-tab {
+            font-family: var(--font-display);
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: var(--color-text-secondary);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            white-space: nowrap;
+        }
+
+        .filter-tab:hover {
+            color: var(--color-accent-primary);
+        }
+
+        .filter-tab.active {
+            color: var(--color-accent-primary);
+            border-bottom-color: var(--color-accent-primary);
+        }
+
+        .job-card {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+            transition: all var(--transition-normal);
+        }
+
+        .job-card:hover {
+            border-color: var(--color-accent-primary);
+            box-shadow: var(--shadow-md);
+        }
+
+        .job-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--spacing-sm);
+            gap: var(--spacing-sm);
+        }
+
+        .job-title {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .job-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+            padding: var(--spacing-sm) 0;
+            border-top: 1px solid var(--color-border);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .job-info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .job-info-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: var(--color-text-muted);
+        }
+
+        .job-info-value {
+            font-size: 1rem;
+            color: var(--color-text-primary);
+        }
+
+        .job-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 768px) {
+            .grid-4 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .job-info {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <script type="module">
+        import { account, databases, APPWRITE_CONFIG, showLoading, hideLoading, showAlert, Query, isAuthenticated, getUserRole } from '/js/appwrite.js';
+
+        let currentUser = null;
+        let allJobs = [];
+        let currentFilter = 'all';
+
+        // Authentication check
+        async function checkAuth() {
+            const authenticated = await isAuthenticated();
+            if (!authenticated) {
+                window.location.href = '/login.html';
+                return false;
+            }
+
+            // Get current user first
+            currentUser = await getCurrentUser();
+            if (!currentUser) {
+                window.location.href = '/login.html';
+                return false;
+            }
+
+            // Check role
+            const role = await getUserRole(currentUser.$id);
+            if (role !== 'worker') {
+                showAlert('Access denied. Workers only.', 'error');
+                setTimeout(() => window.location.href = '/index.html', 2000);
+                return false;
+            }
+
+            return true;
+        }
+
+        // Get current user
+        async function getCurrentUser() {
+            try {
+                return await account.get();
+            } catch (error) {
+                console.error('Error getting user:', error);
+                return null;
+            }
+        }
+
+        // Load all jobs
+        async function loadJobs() {
+            try {
+                showLoading();
+
+                // Get worker profile first to get the correct worker ID
+                const workerResponse = await databases.listDocuments(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.workers,
+                    [Query.equal('userId', currentUser.$id)]
+                );
+
+                if (workerResponse.documents.length === 0) {
+                    console.error('Worker profile not found');
+                    hideLoading();
+                    return;
+                }
+
+                const workerId = workerResponse.documents[0].$id;
+
+                const bookingsResponse = await databases.listDocuments(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.bookings,
+                    [
+                        Query.equal('workerId', workerId),
+                        Query.orderDesc('$createdAt') // timestamp
+                    ]
+                );
+
+                allJobs = bookingsResponse.documents;
+
+                // If no jobs, just update stats and display
+                if (allJobs.length === 0) {
+                    updateStats();
+                    displayJobs();
+                    hideLoading();
+                    return;
+                }
+
+                // Fetch customer details for each job
+                const customerIds = [...new Set(allJobs.map(job => job.customerId))];
+
+                if (customerIds.length > 0) {
+                    const customersResponse = await databases.listDocuments(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.users,
+                        [Query.equal('userId', customerIds)]
+                    );
+
+                    // Create customer map
+                    const customerMap = {};
+                    customersResponse.documents.forEach(user => {
+                        customerMap[user.userId] = user;
+                    });
+
+                    // Attach customer data to jobs
+                    allJobs.forEach(job => {
+                        job.customerData = customerMap[job.customerId];
+                    });
+                }
+
+                updateStats();
+                displayJobs();
+
+                hideLoading();
+            } catch (error) {
+                console.error('Error loading jobs:', error);
+                showAlert(`Failed to load jobs: ${error.message}`, 'error');
+                hideLoading();
+            }
+        }
+
+        // Update statistics
+        function updateStats() {
+            const pending = allJobs.filter(j => j.status === 'pending').length;
+            const active = allJobs.filter(j => ['accepted', 'in-progress'].includes(j.status)).length;
+            const completed = allJobs.filter(j => j.status === 'completed').length;
+
+            document.getElementById('totalJobs').textContent = allJobs.length;
+            document.getElementById('pendingJobs').textContent = pending;
+            document.getElementById('activeJobs').textContent = active;
+            document.getElementById('completedJobs').textContent = completed;
+        }
+
+        // Display jobs
+        function displayJobs() {
+            const jobsList = document.getElementById('jobsList');
+            const emptyState = document.getElementById('emptyState');
+
+            let filteredJobs = allJobs;
+            if (currentFilter !== 'all') {
+                filteredJobs = allJobs.filter(job => job.status === currentFilter);
+            }
+
+            if (filteredJobs.length === 0) {
+                jobsList.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+
+            jobsList.innerHTML = filteredJobs.map(job => {
+                const statusColors = {
+                    'pending': 'warning',
+                    'accepted': 'info',
+                    'in-progress': 'info',
+                    'completed': 'success',
+                    'cancelled': 'error'
+                };
+
+                const statusColor = statusColors[job.status] || 'secondary';
+                const customerName = job.customerData?.name || 'Unknown Customer';
+                const customerPhone = job.customerData?.phone || 'N/A';
+
+                return `
+                    <div class="job-card">
+                        <div class="job-header">
+                            <div>
+                                <div class="job-title">${job.serviceCategory || 'Service'}</div>
+                                <span class="badge badge-${statusColor}">${job.status}</span>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; color: var(--color-accent-primary);">
+                                    ₹${job.estimatedPrice || 0}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="job-info">
+                            <div class="job-info-item">
+                                <span class="job-info-label">Customer</span>
+                                <span class="job-info-value">${customerName}</span>
+                            </div>
+                            <div class="job-info-item">
+                                <span class="job-info-label">Phone</span>
+                                <span class="job-info-value">${customerPhone}</span>
+                            </div>
+                            <div class="job-info-item">
+                                <span class="job-info-label">Date</span>
+                                <span class="job-info-value">${job.scheduledTime ? new Date(job.scheduledTime).toLocaleDateString() : 'N/A'}</span>
+                            </div>
+                            <div class="job-info-item">
+                                <span class="job-info-label">Time</span>
+                                <span class="job-info-value">${job.scheduledTime ? new Date(job.scheduledTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'TBD'}</span>
+                            </div>
+                        </div>
+
+                        ${job.description ? `
+                            <div style="margin-bottom: var(--spacing-sm);">
+                                <span class="job-info-label">Description</span>
+                                <p style="color: var(--color-text-secondary); margin-top: 0.25rem;">${job.description}</p>
+                            </div>
+                        ` : ''}
+
+                        ${job.address ? `
+                            <div style="margin-bottom: var(--spacing-md);">
+                                <span class="job-info-label">Address</span>
+                                <p style="color: var(--color-text-secondary); margin-top: 0.25rem;">${job.address}</p>
+                            </div>
+                        ` : ''}
+
+                        <div class="job-actions">
+                            ${job.status === 'pending' ? `
+                                <button class="btn btn-primary btn-sm" onclick="updateJobStatus('${job.$id}', 'accepted')">
+                                    Accept Job
+                                </button>
+                                <button class="btn btn-ghost btn-sm" onclick="updateJobStatus('${job.$id}', 'cancelled')">
+                                    Reject
+                                </button>
+                            ` : ''}
+                            ${job.status === 'accepted' ? `
+                                <button class="btn btn-primary btn-sm" onclick="updateJobStatus('${job.$id}', 'in-progress')">
+                                    Start Job
+                                </button>
+                            ` : ''}
+                            ${job.status === 'in-progress' ? `
+                                <button class="btn btn-primary btn-sm" onclick="updateJobStatus('${job.$id}', 'completed')">
+                                    Mark Complete
+                                </button>
+                            ` : ''}
+                            ${customerPhone !== 'N/A' ? `
+                                <a href="tel:${customerPhone}" class="btn btn-secondary btn-sm">
+                                    📞 Call Customer
+                                </a>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Update job status
+        window.updateJobStatus = async function (jobId, newStatus) {
+            try {
+                showLoading();
+
+                await databases.updateDocument(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.bookings,
+                    jobId,
+                    { status: newStatus }
+                );
+
+                // Increment completedJobs on worker document when job is completed
+                if (newStatus === 'completed') {
+                    try {
+                        const workerResponse = await databases.listDocuments(
+                            APPWRITE_CONFIG.databaseId,
+                            APPWRITE_CONFIG.collections.workers,
+                            [Query.equal('userId', currentUser.$id)]
+                        );
+
+                        if (workerResponse.documents.length > 0) {
+                            const worker = workerResponse.documents[0];
+                            await databases.updateDocument(
+                                APPWRITE_CONFIG.databaseId,
+                                APPWRITE_CONFIG.collections.workers,
+                                worker.$id,
+                                { completedJobs: (worker.completedJobs || 0) + 1 }
+                            );
+                        }
+                    } catch (workerError) {
+                        console.warn('Could not update worker completedJobs count:', workerError);
+                    }
+                }
+
+                showAlert(`Job ${newStatus} successfully`, 'success');
+                await loadJobs();
+
+                hideLoading();
+            } catch (error) {
+                console.error('Error updating job status:', error);
+                showAlert('Failed to update job status', 'error');
+                hideLoading();
+            }
+        };
+
+        // Filter tabs
+        document.querySelectorAll('.filter-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                currentFilter = tab.dataset.status;
+                displayJobs();
+            });
+        });
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            try {
+                await account.deleteSession('current');
+                window.location.href = '/index.html';
+            } catch (error) {
+                console.error('Logout error:', error);
+                window.location.href = '/index.html';
+            }
+        });
+
+        // Initialize
+        async function init() {
+            const isAuth = await checkAuth();
+            if (!isAuth) return;
+
+            // currentUser is already set in checkAuth
+            await loadJobs();
+        }
+
+        init();
+    </script>
+
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+        <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <svg id="moon-icon" class="hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+    </button>
+
+    <script type="module">
+        import { toggleTheme, initTheme } from '/js/theme.js';
+        window.toggleTheme = toggleTheme;
+        initTheme();
+    </script>
+
+</body>
+
+</html>

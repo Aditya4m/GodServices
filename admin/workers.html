@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Management - GOD Services Admin</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container flex-between">
+            <div class="navbar-brand">GOD SERVICES - ADMIN</div>
+            <ul class="navbar-nav">
+                <li><a href="/admin/dashboard.html" class="nav-link">Dashboard</a></li>
+                <li><a href="/admin/workers.html" class="nav-link active">Workers</a></li>
+                <li><a href="/admin/customers.html" class="nav-link">Customers</a></li>
+                <li><a href="/admin/bookings.html" class="nav-link">Bookings</a></li>
+                <li><a href="/admin/services.html" class="nav-link">Services</a></li>
+                <li><a href="/admin/analytics.html" class="nav-link">Analytics</a></li>
+                <li><button class="btn btn-ghost btn-sm" id="logoutBtn">Logout</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container" style="padding: var(--spacing-xl) var(--spacing-md);">
+
+        <!-- Header -->
+        <section class="page-header flex-between">
+            <div>
+                <h1>Worker Management</h1>
+                <p class="text-secondary">Approve, manage, and monitor service workers</p>
+            </div>
+        </section>
+
+        <!-- Tabs -->
+        <section class="tabs-section mt-lg">
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="pending">Pending Approval (<span
+                        id="pendingCount">0</span>)</button>
+                <button class="tab-btn" data-tab="approved">Approved (<span id="approvedCount">0</span>)</button>
+                <button class="tab-btn" data-tab="all">All Workers (<span id="allCount">0</span>)</button>
+            </div>
+        </section>
+
+        <!-- Workers List -->
+        <section class="workers-list mt-md">
+            <div id="workersContainer">
+                <!-- Workers will be loaded dynamically -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Edit Worker Modal -->
+    <div class="modal-overlay" id="editWorkerModal">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Worker</h3>
+                <button class="modal-close" onclick="closeEditModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editWorkerForm">
+
+                    <div class="form-group">
+                        <label class="form-label">Skill Category</label>
+                        <select id="editSkillCategory" class="form-select">
+                            <option value="plumber">Plumber</option>
+                            <option value="electrician">Electrician</option>
+                            <option value="ac-technician">AC Technician</option>
+                            <option value="carpenter">Carpenter</option>
+                            <option value="painter">Painter</option>
+                            <option value="cleaner">Cleaner</option>
+                            <option value="gardener">Gardener</option>
+                            <option value="mechanic">Mechanic</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Experience (Years)</label>
+                        <input type="number" id="editExperience" class="form-input" min="0" max="50">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Service Area (Pincodes)</label>
+                        <input type="text" id="editServiceArea" class="form-input" placeholder="e.g., 110001, 110002">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Charges (₹/hour)</label>
+                        <input type="number" id="editCharges" class="form-input" min="0">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="flex" style="align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="checkbox" id="editIsActive">
+                            <span style="color: var(--color-text-secondary);">Worker is Active</span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block">Save Changes</button>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .page-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .tabs {
+            display: flex;
+            gap: var(--spacing-sm);
+            border-bottom: 2px solid var(--color-border);
+        }
+
+        .tab-btn {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: transparent;
+            border: none;
+            color: var(--color-text-secondary);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            position: relative;
+        }
+
+        .tab-btn::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--color-accent-primary);
+            transition: width var(--transition-normal);
+        }
+
+        .tab-btn:hover,
+        .tab-btn.active {
+            color: var(--color-accent-primary);
+        }
+
+        .tab-btn.active::after {
+            width: 100%;
+        }
+
+        .worker-card {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-md);
+            transition: all var(--transition-fast);
+        }
+
+        .worker-card:hover {
+            border-color: var(--color-accent-primary);
+            box-shadow: var(--shadow-md);
+        }
+
+        .worker-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .worker-info h3 {
+            font-size: 1.5rem;
+            color: var(--color-text-primary);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .worker-category {
+            font-size: 0.9rem;
+            color: var(--color-accent-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .worker-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+            padding: var(--spacing-md) 0;
+            border-top: 1px solid var(--color-border);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .detail-item {
+            font-size: 0.9rem;
+        }
+
+        .detail-item strong {
+            color: var(--color-text-secondary);
+            display: block;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .detail-item span {
+            color: var(--color-text-primary);
+        }
+
+        .worker-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 768px) {
+            .navbar-nav {
+                display: none;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .worker-details {
+                grid-template-columns: 1fr;
+            }
+
+            .worker-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+
+    <script type="module">
+        import { account, databases, APPWRITE_CONFIG, showLoading, hideLoading, showAlert, logout } from '/js/appwrite.js';
+        import { Query } from 'https://cdn.jsdelivr.net/npm/appwrite@14.0.1/+esm';
+
+        let currentUser = null;
+        let allWorkers = [];
+        let currentTab = 'pending';
+        let editingWorkerId = null;
+
+        // Initialize
+        async function init() {
+            showLoading('Loading workers...');
+
+            try {
+                currentUser = await account.get();
+                await loadWorkers();
+            } catch (error) {
+                console.error('Initialization error:', error);
+                showAlert('Failed to load workers. Please try again.', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Load workers
+        async function loadWorkers() {
+            try {
+                const workersRes = await databases.listDocuments(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.workers
+                );
+
+                allWorkers = workersRes.documents;
+
+                // Update counts
+                document.getElementById('pendingCount').textContent = allWorkers.filter(w => !w.isApproved).length;
+                document.getElementById('approvedCount').textContent = allWorkers.filter(w => w.isApproved).length;
+                document.getElementById('allCount').textContent = allWorkers.length;
+
+                displayWorkers();
+
+            } catch (error) {
+                console.error('Error loading workers:', error);
+                showAlert('Failed to load workers', 'error');
+            }
+        }
+
+        // Display workers based on current tab
+        function displayWorkers() {
+            const container = document.getElementById('workersContainer');
+
+            let filteredWorkers = allWorkers;
+
+            if (currentTab === 'pending') {
+                filteredWorkers = allWorkers.filter(w => !w.isApproved);
+            } else if (currentTab === 'approved') {
+                filteredWorkers = allWorkers.filter(w => w.isApproved);
+            }
+
+            if (filteredWorkers.length === 0) {
+                container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">👷</div>
+            <p>No workers found in this category</p>
+          </div>
+        `;
+                return;
+            }
+
+            container.innerHTML = '';
+
+            filteredWorkers.forEach(worker => {
+                const workerCard = document.createElement('div');
+                workerCard.className = 'worker-card';
+
+                workerCard.innerHTML = `
+          <div class="worker-header">
+            <div class="worker-info">
+              <h3>Worker #${worker.$id.substring(0, 8)}</h3>
+              <div class="worker-category">${worker.skillCategory}</div>
+            </div>
+            <div>
+              ${worker.isApproved
+                        ? '<span class="badge badge-success">Approved</span>'
+                        : '<span class="badge badge-warning">Pending</span>'}
+              ${worker.isActive
+                        ? '<span class="badge badge-info ml-sm">Active</span>'
+                        : '<span class="badge badge-error ml-sm">Busy</span>'}
+            </div>
+          </div>
+          
+          <div class="worker-details">
+            <div class="detail-item">
+              <strong>Experience:</strong>
+              <span>${worker.experience} years</span>
+            </div>
+            <div class="detail-item">
+              <strong>Charges:</strong>
+              <span>₹${worker.charges}/hour</span>
+            </div>
+            <div class="detail-item">
+              <strong>Service Area:</strong>
+              <span>${worker.serviceArea ? worker.serviceArea.join(', ') : 'N/A'}</span>
+            </div>
+            <div class="detail-item">
+              <strong>Completed Jobs:</strong>
+              <span>${worker.completedJobs || 0}</span>
+            </div>
+            <div class="detail-item">
+              <strong>Rating:</strong>
+              <span>${(worker.rating || 0).toFixed(1)} ⭐</span>
+            </div>
+            <div class="detail-item">
+              <strong>Status:</strong>
+              <span>${worker.isActive ? 'Available' : 'Busy'}</span>
+            </div>
+          </div>
+          
+          <div class="worker-actions">
+            ${!worker.isApproved
+                        ? `<button class="btn btn-primary" onclick="approveWorker('${worker.$id}')">Approve Worker</button>
+                 <button class="btn btn-secondary" onclick="rejectWorker('${worker.$id}')">Reject</button>`
+                        : `<button class="btn btn-ghost" onclick="disableWorker('${worker.$id}')">Disable Worker</button>`}
+            <button class="btn btn-ghost" onclick="editWorker('${worker.$id}')">Edit Details</button>
+          </div>
+        `;
+
+                container.appendChild(workerCard);
+            });
+        }
+
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentTab = btn.dataset.tab;
+                displayWorkers();
+            });
+        });
+
+        // Approve worker
+        window.approveWorker = async function (workerId) {
+            showLoading('Approving worker...');
+
+            try {
+                await databases.updateDocument(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.workers,
+                    workerId,
+                    { isApproved: true, isActive: true }
+                );
+
+                showAlert('Worker approved successfully!', 'success');
+                await loadWorkers();
+
+            } catch (error) {
+                console.error('Error approving worker:', error);
+                showAlert('Failed to approve worker', 'error');
+            } finally {
+                hideLoading();
+            }
+        };
+
+        // Reject worker
+        window.rejectWorker = async function (workerId) {
+            if (!confirm('Are you sure you want to reject this worker?')) return;
+
+            showLoading('Rejecting worker...');
+
+            try {
+                await databases.deleteDocument(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.workers,
+                    workerId
+                );
+
+                showAlert('Worker rejected and removed', 'info');
+                await loadWorkers();
+
+            } catch (error) {
+                console.error('Error rejecting worker:', error);
+                showAlert('Failed to reject worker', 'error');
+            } finally {
+                hideLoading();
+            }
+        };
+
+        // Disable worker
+        window.disableWorker = async function (workerId) {
+            if (!confirm('Are you sure you want to disable this worker?')) return;
+
+            showLoading('Disabling worker...');
+
+            try {
+                await databases.updateDocument(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.workers,
+                    workerId,
+                    { isApproved: false, isActive: false }
+                );
+
+                showAlert('Worker disabled', 'info');
+                await loadWorkers();
+
+            } catch (error) {
+                console.error('Error disabling worker:', error);
+                showAlert('Failed to disable worker', 'error');
+            } finally {
+                hideLoading();
+            }
+        };
+
+        // Edit worker
+        window.editWorker = function (workerId) {
+            const worker = allWorkers.find(w => w.$id === workerId);
+            if (!worker) return;
+
+            editingWorkerId = workerId;
+
+            document.getElementById('editSkillCategory').value = worker.skillCategory;
+            document.getElementById('editExperience').value = worker.experience;
+            document.getElementById('editServiceArea').value = worker.serviceArea ? worker.serviceArea.join(', ') : '';
+            document.getElementById('editCharges').value = worker.charges;
+            document.getElementById('editIsActive').checked = worker.isActive;
+
+            document.getElementById('editWorkerModal').classList.add('active');
+        };
+
+        // Close edit modal
+        window.closeEditModal = function () {
+            document.getElementById('editWorkerModal').classList.remove('active');
+            editingWorkerId = null;
+        };
+
+        // Save worker edits
+        document.getElementById('editWorkerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!editingWorkerId) return;
+
+            showLoading('Saving changes...');
+
+            try {
+                const serviceArea = document.getElementById('editServiceArea').value
+                    .split(',')
+                    .map(p => p.trim())
+                    .filter(p => p);
+
+                await databases.updateDocument(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.workers,
+                    editingWorkerId,
+                    {
+                        skillCategory: document.getElementById('editSkillCategory').value,
+                        experience: parseInt(document.getElementById('editExperience').value),
+                        serviceArea: serviceArea,
+                        charges: parseInt(document.getElementById('editCharges').value),
+                        isActive: document.getElementById('editIsActive').checked
+                    }
+                );
+
+                showAlert('Worker updated successfully!', 'success');
+                closeEditModal();
+                await loadWorkers();
+
+            } catch (error) {
+                console.error('Error updating worker:', error);
+                showAlert('Failed to update worker', 'error');
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // Logout handler
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+
+        // Initialize on page load
+        init();
+    </script>
+
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+        <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <svg id="moon-icon" class="hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+    </button>
+
+    <script type="module">
+        import { toggleTheme, initTheme } from '/js/theme.js';
+        window.toggleTheme = toggleTheme;
+        initTheme();
+    </script>
+
+</body>
+
+</html>

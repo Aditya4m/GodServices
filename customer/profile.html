@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - GOD Services</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container flex-between">
+            <div class="navbar-brand">GOD SERVICES</div>
+            <ul class="navbar-nav">
+                <li><a href="/customer/dashboard.html" class="nav-link">Dashboard</a></li>
+                <li><a href="/customer/services.html" class="nav-link">Services</a></li>
+                <li><a href="/customer/history.html" class="nav-link">My Bookings</a></li>
+                <li><a href="/customer/profile.html" class="nav-link active">Profile</a></li>
+                <li><button class="btn btn-ghost btn-sm" id="logoutBtn">Logout</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container" style="padding: var(--spacing-xl) var(--spacing-md);">
+
+        <!-- Header -->
+        <section class="profile-header">
+            <div class="profile-avatar" id="avatarInitial">C</div>
+            <div>
+                <h1 id="profileName">My Profile</h1>
+                <p class="text-secondary">Manage your personal information</p>
+            </div>
+        </section>
+
+        <!-- Profile Form -->
+        <section class="profile-card mt-xl">
+            <div class="profile-card-header">
+                <h2>Personal Details</h2>
+                <button class="btn btn-ghost btn-sm" id="editToggle" onclick="toggleEdit()">✏️ Edit</button>
+            </div>
+
+            <form id="profileForm">
+                <!-- Name -->
+                <div class="form-group">
+                    <label class="form-label" for="name">Full Name</label>
+                    <input type="text" id="name" class="form-input" placeholder="Your full name" disabled>
+                </div>
+
+                <!-- Email -->
+                <div class="form-group">
+                    <label class="form-label" for="email">Email</label>
+                    <input type="email" id="email" class="form-input" placeholder="your@email.com" disabled>
+                    <p class="form-hint">Email is linked to your account and cannot be changed here</p>
+                </div>
+
+                <!-- Phone -->
+                <div class="form-group">
+                    <label class="form-label" for="phone">Phone Number</label>
+                    <input type="tel" id="phone" class="form-input" placeholder="+91 XXXXXXXXXX" disabled>
+                </div>
+
+                <!-- Address -->
+                <div class="form-group">
+                    <label class="form-label" for="address">Address</label>
+                    <textarea id="address" class="form-textarea" placeholder="Enter your full address" rows="3"
+                        disabled></textarea>
+                </div>
+
+                <!-- Pincode -->
+                <div class="form-group">
+                    <label class="form-label" for="pincode">Pincode</label>
+                    <input type="text" id="pincode" class="form-input" placeholder="e.g., 110001" pattern="[0-9]{6}"
+                        maxlength="6" disabled>
+                </div>
+
+                <!-- Save Button (hidden by default) -->
+                <div class="profile-actions hidden" id="saveActions">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <button type="button" class="btn btn-ghost" onclick="cancelEdit()">Cancel</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Account Info -->
+        <section class="profile-card mt-lg">
+            <div class="profile-card-header">
+                <h2>Account Info</h2>
+            </div>
+            <div class="account-info-grid">
+                <div class="account-info-item">
+                    <strong>Member Since</strong>
+                    <span id="memberSince">—</span>
+                </div>
+                <div class="account-info-item">
+                    <strong>Total Bookings</strong>
+                    <span id="totalBookings">0</span>
+                </div>
+                <div class="account-info-item">
+                    <strong>Total Spent</strong>
+                    <span id="totalSpent">₹0</span>
+                </div>
+                <div class="account-info-item">
+                    <strong>Account Status</strong>
+                    <span class="badge badge-success">Active</span>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <style>
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-lg);
+        }
+
+        .profile-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--color-accent-primary), var(--color-accent-hover, #d97706));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-display);
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #fff;
+            text-transform: uppercase;
+            flex-shrink: 0;
+            box-shadow: 0 0 20px rgba(255, 107, 0, 0.3);
+        }
+
+        .profile-card {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+        }
+
+        .profile-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-xl);
+            padding-bottom: var(--spacing-md);
+            border-bottom: 2px solid var(--color-border);
+        }
+
+        .profile-card-header h2 {
+            font-size: 1.3rem;
+        }
+
+        .form-group {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .form-input:disabled,
+        .form-textarea:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            background: var(--color-bg-elevated);
+        }
+
+        .form-input:not(:disabled),
+        .form-textarea:not(:disabled) {
+            border-color: var(--color-accent-primary);
+            box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.1);
+        }
+
+        .form-hint {
+            font-size: 0.8rem;
+            color: var(--color-text-muted);
+            margin-top: var(--spacing-xs);
+        }
+
+        .profile-actions {
+            display: flex;
+            gap: var(--spacing-md);
+            padding-top: var(--spacing-md);
+            border-top: 1px solid var(--color-border);
+        }
+
+        .account-info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--spacing-lg);
+        }
+
+        .account-info-item {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-xs);
+        }
+
+        .account-info-item strong {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--color-text-secondary);
+        }
+
+        .account-info-item span {
+            font-size: 1.1rem;
+            color: var(--color-text-primary);
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .navbar-nav {
+                display: none;
+            }
+
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .profile-header h1 {
+                font-size: 1.8rem;
+            }
+
+            .account-info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+
+    <script type="module">
+        import { account, databases, APPWRITE_CONFIG, showLoading, hideLoading, showAlert, logout } from '/js/appwrite.js';
+        import { Query } from 'https://cdn.jsdelivr.net/npm/appwrite@14.0.1/+esm';
+
+        let currentUser = null;
+        let userDoc = null;
+        let customerDoc = null;
+        let customerDocId = null;
+        let isEditing = false;
+        let originalValues = {};
+
+        async function init() {
+            showLoading('Loading profile...');
+
+            try {
+                currentUser = await account.get();
+
+                // Load user document
+                try {
+                    const userRes = await databases.listDocuments(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.users,
+                        [Query.equal('userId', currentUser.$id)]
+                    );
+                    if (userRes.documents.length > 0) userDoc = userRes.documents[0];
+                } catch (e) {
+                    console.warn('userId query failed, fallback:', e);
+                    const allUsers = await databases.listDocuments(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.users
+                    );
+                    userDoc = allUsers.documents.find(u => u.userId === currentUser.$id);
+                }
+
+                // Load customer document
+                try {
+                    const custRes = await databases.listDocuments(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.customers,
+                        [Query.equal('userId', currentUser.$id)]
+                    );
+                    if (custRes.documents.length > 0) {
+                        customerDoc = custRes.documents[0];
+                        customerDocId = customerDoc.$id;
+                    }
+                } catch (e) {
+                    console.warn('Customer query failed, fallback:', e);
+                    const allCust = await databases.listDocuments(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.customers
+                    );
+                    customerDoc = allCust.documents.find(c => c.userId === currentUser.$id);
+                    if (customerDoc) customerDocId = customerDoc.$id;
+                }
+
+                // Load bookings for stats
+                let bookings = [];
+                try {
+                    const bookRes = await databases.listDocuments(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.bookings
+                    );
+                    bookings = bookRes.documents.filter(b => b.customerId === currentUser.$id);
+                } catch (e) { console.warn('Could not load bookings:', e); }
+
+                // Populate the form
+                populateForm();
+                populateAccountInfo(bookings);
+
+            } catch (error) {
+                console.error('Init error:', error);
+                showAlert('Please login to view your profile', 'error');
+                setTimeout(() => { window.location.href = '/login.html'; }, 2000);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function populateForm() {
+            const name = userDoc?.name || currentUser?.name || '';
+            const email = userDoc?.email || currentUser?.email || '';
+            const phone = userDoc?.phone || '';
+            const address = customerDoc?.address || '';
+            const pincode = customerDoc?.pincode || '';
+
+            document.getElementById('name').value = name;
+            document.getElementById('email').value = email;
+            document.getElementById('phone').value = phone;
+            document.getElementById('address').value = address;
+            document.getElementById('pincode').value = pincode;
+
+            // Update header
+            document.getElementById('profileName').textContent = name || 'My Profile';
+            document.getElementById('avatarInitial').textContent = name ? name.charAt(0).toUpperCase() : 'C';
+        }
+
+        function populateAccountInfo(bookings) {
+            const joinDate = userDoc?.createdAt || userDoc?.$createdAt || currentUser?.$createdAt;
+            document.getElementById('memberSince').textContent = joinDate
+                ? new Date(joinDate).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })
+                : '—';
+
+            document.getElementById('totalBookings').textContent = bookings.length;
+
+            const totalSpent = bookings
+                .filter(b => b.status === 'completed')
+                .reduce((sum, b) => sum + (b.estimatedPrice || 0), 0);
+            document.getElementById('totalSpent').textContent = `₹${totalSpent.toLocaleString()}`;
+        }
+
+        // Toggle edit mode
+        window.toggleEdit = function () {
+            isEditing = !isEditing;
+            const fields = ['name', 'phone', 'address', 'pincode'];
+            const saveActions = document.getElementById('saveActions');
+            const editBtn = document.getElementById('editToggle');
+
+            if (isEditing) {
+                // Save original values for cancel
+                fields.forEach(f => originalValues[f] = document.getElementById(f).value);
+
+                fields.forEach(f => document.getElementById(f).disabled = false);
+                saveActions.classList.remove('hidden');
+                editBtn.textContent = '🔒 Lock';
+            } else {
+                fields.forEach(f => document.getElementById(f).disabled = true);
+                saveActions.classList.add('hidden');
+                editBtn.textContent = '✏️ Edit';
+            }
+        };
+
+        // Cancel edit
+        window.cancelEdit = function () {
+            const fields = ['name', 'phone', 'address', 'pincode'];
+            fields.forEach(f => {
+                document.getElementById(f).value = originalValues[f] || '';
+                document.getElementById(f).disabled = true;
+            });
+            document.getElementById('saveActions').classList.add('hidden');
+            document.getElementById('editToggle').textContent = '✏️ Edit';
+            isEditing = false;
+        };
+
+        // Save profile
+        document.getElementById('profileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showLoading('Saving profile...');
+
+            const name = document.getElementById('name').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const address = document.getElementById('address').value.trim();
+            const pincode = document.getElementById('pincode').value.trim();
+
+            if (!name) {
+                hideLoading();
+                showAlert('Name is required', 'error');
+                return;
+            }
+
+            try {
+                // Update user document (name, phone)
+                if (userDoc) {
+                    await databases.updateDocument(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.users,
+                        userDoc.$id,
+                        { name, phone }
+                    );
+                    userDoc.name = name;
+                    userDoc.phone = phone;
+                }
+
+                // Update or create customer document (address, pincode)
+                if (customerDocId) {
+                    await databases.updateDocument(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.customers,
+                        customerDocId,
+                        { address, pincode }
+                    );
+                    customerDoc.address = address;
+                    customerDoc.pincode = pincode;
+                } else {
+                    // Create new customer document
+                    try {
+                        const { ID } = await import('https://cdn.jsdelivr.net/npm/appwrite@14.0.1/+esm');
+                        const newDoc = await databases.createDocument(
+                            APPWRITE_CONFIG.databaseId,
+                            APPWRITE_CONFIG.collections.customers,
+                            ID.unique(),
+                            {
+                                userId: currentUser.$id,
+                                address,
+                                pincode,
+                                completedJobs: 0
+                            }
+                        );
+                        customerDoc = newDoc;
+                        customerDocId = newDoc.$id;
+                    } catch (createErr) {
+                        console.warn('Could not create customer doc:', createErr);
+                    }
+                }
+
+                // Update UI
+                document.getElementById('profileName').textContent = name;
+                document.getElementById('avatarInitial').textContent = name.charAt(0).toUpperCase();
+
+                // Exit edit mode
+                toggleEdit();
+                showAlert('Profile saved successfully!', 'success');
+
+            } catch (error) {
+                console.error('Save error:', error);
+                showAlert('Failed to save profile. Please try again.', 'error');
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+
+        init();
+    </script>
+
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+        <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <svg id="moon-icon" class="hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+    </button>
+
+    <script type="module">
+        import { toggleTheme, initTheme } from '/js/theme.js';
+        window.toggleTheme = toggleTheme;
+        initTheme();
+    </script>
+
+</body>
+
+</html>

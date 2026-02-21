@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Service - GOD Services</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container flex-between">
+            <div class="navbar-brand">GOD SERVICES</div>
+            <ul class="navbar-nav">
+                <li><a href="/customer/dashboard.html" class="nav-link">Dashboard</a></li>
+                <li><a href="/customer/services.html" class="nav-link">Services</a></li>
+                <li><a href="/customer/history.html" class="nav-link">My Bookings</a></li>
+                <li><a href="/customer/profile.html" class="nav-link">Profile</a></li>
+                <li><button class="btn btn-ghost btn-sm" id="logoutBtn">Logout</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container" style="padding: var(--spacing-xl) var(--spacing-md); max-width: 800px;">
+
+        <!-- Header -->
+        <section class="page-header">
+            <h1>Book Service</h1>
+            <p class="text-secondary">Fill in the details to book your service</p>
+        </section>
+
+        <!-- Booking Form -->
+        <section class="booking-form-section card mt-lg">
+            <form id="bookingForm">
+
+                <!-- Service Info -->
+                <div class="form-section">
+                    <h3 class="form-section-title">Service Information</h3>
+
+                    <div class="form-group">
+                        <label class="form-label">Service Category</label>
+                        <input type="text" id="serviceCategory" class="form-input" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Estimated Price</label>
+                        <input type="text" id="estimatedPrice" class="form-input" readonly>
+                    </div>
+                </div>
+
+                <!-- Customer Details -->
+                <div class="form-section">
+                    <h3 class="form-section-title">Your Details</h3>
+
+                    <div class="form-group">
+                        <label class="form-label" for="customerName">Full Name</label>
+                        <input type="text" id="customerName" class="form-input" placeholder="Enter your name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="customerPhone">Phone Number</label>
+                        <input type="tel" id="customerPhone" class="form-input" placeholder="+91 XXXXXXXXXX" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="customerAddress">Address</label>
+                        <textarea id="customerAddress" class="form-textarea" placeholder="Enter your complete address"
+                            rows="3" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="customerPincode">Pincode</label>
+                        <input type="text" id="customerPincode" class="form-input" placeholder="e.g., 110001"
+                            pattern="[0-9]{6}" required>
+                    </div>
+                </div>
+
+                <!-- Problem Description -->
+                <div class="form-section">
+                    <h3 class="form-section-title">Problem Description</h3>
+
+                    <div class="form-group">
+                        <label class="form-label" for="problemDescription">Describe the issue</label>
+                        <textarea id="problemDescription" class="form-textarea"
+                            placeholder="Please describe the problem in detail..." rows="5" required></textarea>
+                        <p class="form-hint">Be as specific as possible to help the worker prepare</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="scheduledTime">Preferred Date & Time</label>
+                        <input type="datetime-local" id="scheduledTime" class="form-input" required>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn btn-primary btn-block btn-lg">
+                    Proceed to Payment
+                </button>
+
+            </form>
+        </section>
+
+    </main>
+
+    <!-- Payment Modal -->
+    <div class="modal-overlay" id="paymentModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Complete Payment</h3>
+                <button class="modal-close" onclick="closePaymentModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+
+                <!-- Payment Info -->
+                <div class="payment-info">
+                    <div class="detail-row">
+                        <span class="detail-label">Service:</span>
+                        <span class="detail-value" id="paymentService"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Amount:</span>
+                        <span class="detail-value" id="paymentAmount"></span>
+                    </div>
+                </div>
+
+                <!-- UPI Payment -->
+                <div class="payment-section">
+                    <h4>Pay via UPI</h4>
+
+                    <!-- QR Code -->
+                    <div class="qr-code-container" id="qrCodeContainer">
+                        <div id="qrCode"></div>
+                        <p class="text-secondary mt-sm">Scan with any UPI app</p>
+                    </div>
+
+                    <!-- UPI Apps (Mobile Only) -->
+                    <div class="upi-apps" id="upiApps">
+                        <p class="text-secondary mb-sm">Or pay with:</p>
+                        <div class="flex gap-sm" style="justify-content: center; flex-wrap: wrap;">
+                            <button class="btn btn-secondary btn-sm" onclick="openUPIApp('gpay')">Google Pay</button>
+                            <button class="btn btn-secondary btn-sm" onclick="openUPIApp('phonepe')">PhonePe</button>
+                            <button class="btn btn-secondary btn-sm" onclick="openUPIApp('paytm')">Paytm</button>
+                        </div>
+                    </div>
+
+                    <!-- UTR Input -->
+                    <div class="utr-section mt-lg">
+                        <div class="form-group">
+                            <label class="form-label" for="utrNumber">Transaction ID (UTR)</label>
+                            <input type="text" id="utrNumber" class="form-input" placeholder="Enter 12-digit UTR"
+                                maxlength="12" pattern="[0-9]{12}">
+                            <p class="form-hint">Enter the 12-digit transaction ID from your payment app</p>
+                        </div>
+
+                        <button class="btn btn-primary btn-block" onclick="submitPayment()">
+                            I have Paid
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .page-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .booking-form-section {
+            padding: var(--spacing-xl);
+        }
+
+        .form-section {
+            margin-bottom: var(--spacing-xl);
+            padding-bottom: var(--spacing-lg);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .form-section:last-of-type {
+            border-bottom: none;
+        }
+
+        .form-section-title {
+            font-size: 1.5rem;
+            color: var(--color-accent-primary);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .payment-info {
+            background: var(--color-bg-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: var(--spacing-xs) 0;
+            font-size: 1rem;
+        }
+
+        .detail-label {
+            color: var(--color-text-secondary);
+        }
+
+        .detail-value {
+            color: var(--color-text-primary);
+            font-weight: 600;
+        }
+
+        .payment-section h4 {
+            font-size: 1.25rem;
+            color: var(--color-text-primary);
+            margin-bottom: var(--spacing-md);
+            text-align: center;
+        }
+
+        .qr-code-container {
+            text-align: center;
+            padding: var(--spacing-lg);
+            background: white;
+            border-radius: var(--radius-md);
+            margin-bottom: var(--spacing-md);
+        }
+
+        #qrCode {
+            display: flex;
+            justify-content: center;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .upi-apps {
+            text-align: center;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .utr-section {
+            border-top: 1px solid var(--color-border);
+            padding-top: var(--spacing-lg);
+        }
+
+        @media (max-width: 768px) {
+            .navbar-nav {
+                display: none;
+            }
+
+            .booking-form-section {
+                padding: var(--spacing-md);
+            }
+        }
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script type="module">
+        import { account, databases, storage, APPWRITE_CONFIG, showLoading, hideLoading, showAlert, logout } from '/js/appwrite.js';
+        import { ID } from 'https://cdn.jsdelivr.net/npm/appwrite@14.0.1/+esm';
+
+        let currentUser = null;
+        let bookingData = {};
+        let bookingId = null;
+        let workerPayment = { upiId: null, qrCodeFileId: null }; // worker's payment info
+
+        // Initialize
+        async function init() {
+            try {
+                currentUser = await account.get();
+
+                // Get booking details from session storage
+                const workerId = sessionStorage.getItem('selectedWorker');
+                const category = sessionStorage.getItem('serviceCategory');
+                const price = sessionStorage.getItem('estimatedPrice');
+
+                if (!workerId || !category) {
+                    showAlert('Invalid booking. Please select a worker first.', 'error');
+                    setTimeout(() => {
+                        window.location.href = '/customer/services.html';
+                    }, 2000);
+                    return;
+                }
+
+                document.getElementById('serviceCategory').value = category.replace('-', ' ').toUpperCase();
+                document.getElementById('estimatedPrice').value = `₹${price}/hour`;
+
+                bookingData.workerId = workerId;
+                bookingData.serviceCategory = category;
+                bookingData.estimatedPrice = parseInt(price);
+
+                // Fetch worker's payment info
+                try {
+                    // Try by userId first (most common case)
+                    let workerDocs = [];
+                    try {
+                        const res = await databases.listDocuments(
+                            APPWRITE_CONFIG.databaseId,
+                            APPWRITE_CONFIG.collections.workers,
+                            [Query.equal('userId', workerId)]
+                        );
+                        workerDocs = res.documents;
+                    } catch (e) {
+                        // Fallback: fetch all and find by $id
+                        const res = await databases.listDocuments(
+                            APPWRITE_CONFIG.databaseId,
+                            APPWRITE_CONFIG.collections.workers
+                        );
+                        workerDocs = res.documents.filter(w => w.$id === workerId || w.userId === workerId);
+                    }
+                    if (workerDocs.length > 0) {
+                        workerPayment.upiId = workerDocs[0].upiId || null;
+                        workerPayment.qrCodeFileId = workerDocs[0].qrCodeFileId || null;
+                    }
+                } catch (err) {
+                    console.warn('Could not fetch worker payment info:', err);
+                }
+
+            } catch (error) {
+                console.error('Initialization error:', error);
+                showAlert('Failed to load booking form. Please try again.', 'error');
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            bookingData.customerName = document.getElementById('customerName').value.trim();
+            bookingData.customerPhone = document.getElementById('customerPhone').value.trim();
+            bookingData.location = document.getElementById('customerAddress').value.trim();
+            bookingData.pincode = document.getElementById('customerPincode').value.trim();
+            bookingData.problemDescription = document.getElementById('problemDescription').value.trim();
+            bookingData.scheduledTime = document.getElementById('scheduledTime').value;
+
+            // Show payment modal
+            showPaymentModal();
+        });
+
+        // Show payment modal
+        function showPaymentModal() {
+            document.getElementById('paymentService').textContent = bookingData.serviceCategory.replace('-', ' ').toUpperCase();
+            document.getElementById('paymentAmount').textContent = `₹${bookingData.estimatedPrice}`;
+
+            const qrContainer = document.getElementById('qrCode');
+            qrContainer.innerHTML = '';
+
+            if (workerPayment.qrCodeFileId) {
+                // Priority 1: Show uploaded QR image
+                const imgUrl = storage.getFilePreview(
+                    APPWRITE_CONFIG.buckets.qrCodes,
+                    workerPayment.qrCodeFileId
+                );
+
+                // create image element with fallback
+                const img = document.createElement('img');
+                img.src = imgUrl;
+                img.alt = "Worker QR Code";
+                img.style.cssText = "max-width:200px;max-height:200px;border-radius:8px;object-fit:contain;";
+
+                img.onerror = function () {
+                    console.warn("Uploaded QR failed to load (check bucket permissions). Falling back to UPI ID.");
+                    qrContainer.innerHTML = ''; // Clear broken image
+                    generateUPIQRCode(qrContainer);
+                };
+
+                qrContainer.appendChild(img);
+
+            } else {
+                generateUPIQRCode(qrContainer);
+            }
+
+            document.getElementById('paymentModal').classList.add('active');
+        }
+
+        // Helper to generate UPI QR from ID
+        function generateUPIQRCode(container) {
+            if (workerPayment.upiId) {
+                // Priority 2: Generate QR from worker's UPI ID
+                const upiString = `upi://pay?pa=${workerPayment.upiId}&pn=GOD Services&am=${bookingData.estimatedPrice}&cu=INR`;
+                new QRCode(container, {
+                    text: upiString,
+                    width: 200,
+                    height: 200,
+                    colorDark: '#000000',
+                    colorLight: '#ffffff'
+                });
+            } else {
+                // Priority 3: No payment method set
+                container.innerHTML = `
+                    <div style="padding:1.5rem;text-align:center;color:#888;">
+                        <div style="font-size:2.5rem;">⚠️</div>
+                        <p style="margin-top:0.5rem;">Worker hasn't set up payment yet.<br>Please contact them directly.</p>
+                    </div>`;
+                document.getElementById('upiApps').style.display = 'none';
+            }
+        }
+
+        // Close payment modal
+        window.closePaymentModal = function () {
+            document.getElementById('paymentModal').classList.remove('active');
+        };
+
+        // Open UPI app
+        window.openUPIApp = function (app) {
+            const upiId = workerPayment.upiId;
+            if (!upiId) {
+                showAlert('Worker UPI ID not available.', 'error');
+                return;
+            }
+            const appSchemes = {
+                gpay: `gpay://upi/pay?pa=${upiId}&pn=GOD Services&am=${bookingData.estimatedPrice}&cu=INR`,
+                phonepe: `phonepe://pay?pa=${upiId}&pn=GOD Services&am=${bookingData.estimatedPrice}&cu=INR`,
+                paytm: `paytmmp://pay?pa=${upiId}&pn=GOD Services&am=${bookingData.estimatedPrice}&cu=INR`
+            };
+            window.location.href = appSchemes[app] || `upi://pay?pa=${upiId}&pn=GOD Services&am=${bookingData.estimatedPrice}&cu=INR`;
+        };
+
+        // Submit payment
+        window.submitPayment = async function () {
+            const utr = document.getElementById('utrNumber').value.trim();
+
+            if (!utr || utr.length !== 12) {
+                showAlert('Please enter a valid 12-digit UTR number', 'error');
+                return;
+            }
+
+            showLoading('Creating booking...');
+
+            try {
+                // Create booking
+                const booking = await databases.createDocument(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.bookings,
+                    ID.unique(),
+                    {
+                        customerId: currentUser.$id,
+                        workerId: bookingData.workerId,
+                        serviceCategory: bookingData.serviceCategory,
+                        problemDescription: bookingData.problemDescription,
+                        location: bookingData.location,
+                        pincode: bookingData.pincode,
+                        status: 'pending',
+                        scheduledTime: bookingData.scheduledTime,
+                        estimatedPrice: bookingData.estimatedPrice,
+                        paymentStatus: 'paid',
+                        utr: utr,
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString()
+                    }
+                );
+
+                bookingId = booking.$id;
+
+                showAlert('Booking created successfully! Worker will be notified.', 'success');
+
+                // Clear session storage
+                sessionStorage.removeItem('selectedWorker');
+                sessionStorage.removeItem('serviceCategory');
+                sessionStorage.removeItem('estimatedPrice');
+
+                setTimeout(() => {
+                    window.location.href = '/customer/dashboard.html';
+                }, 2000);
+
+            } catch (error) {
+                console.error('Booking creation error:', error);
+                showAlert(error.message || 'Failed to create booking. Please try again.', 'error');
+            } finally {
+                hideLoading();
+            }
+        };
+
+        // Logout handler
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+
+        // Initialize on page load
+        init();
+    </script>
+
+</body>
+
+</html>

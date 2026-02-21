@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - GOD Services</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+    <div class="auth-container">
+        <div class="auth-card card-glass">
+
+            <!-- Header -->
+            <div class="auth-header">
+                <h1 class="auth-brand">GOD SERVICES</h1>
+                <p class="auth-subtitle">Login to your account</p>
+            </div>
+
+            <!-- Role Badge -->
+            <div class="role-badge-container">
+                <span class="badge badge-primary" id="roleBadge">Customer</span>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form">
+
+                <!-- Email/Phone Input -->
+                <div class="form-group">
+                    <label class="form-label" for="emailPhone">Email or Phone</label>
+                    <input type="text" id="emailPhone" class="form-input" placeholder="Enter email or phone number"
+                        required>
+                    <p class="form-hint">We'll send you an OTP for verification</p>
+                </div>
+
+                <!-- Send OTP Button -->
+                <button type="submit" class="btn btn-primary btn-block" id="sendOtpBtn">
+                    Send OTP
+                </button>
+
+            </form>
+
+            <!-- OTP Verification Form (Hidden Initially) -->
+            <form id="otpForm" class="auth-form hidden">
+
+                <div class="form-group">
+                    <label class="form-label" for="otpCode">Enter OTP</label>
+                    <input type="text" id="otpCode" class="form-input" placeholder="6-digit code" maxlength="6"
+                        pattern="[0-9]{6}" required>
+                    <p class="form-hint">Check your email/phone for the verification code</p>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block" id="verifyOtpBtn">
+                    Verify & Login
+                </button>
+
+                <button type="button" class="btn btn-ghost btn-block" id="resendOtpBtn">
+                    Resend OTP
+                </button>
+
+            </form>
+
+            <!-- Footer -->
+            <div class="auth-footer">
+                <p>Don't have an account? <a href="/register.html" class="text-primary">Register here</a></p>
+                <p><a href="/index.html" class="text-secondary">← Back to home</a></p>
+            </div>
+
+        </div>
+    </div>
+
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--color-bg-primary) 0%, #1a0a00 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        [data-theme="light"] body {
+            background: #ffffff;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 107, 0, 0.05) 0%, transparent 70%);
+            animation: pulse 6s ease-in-out infinite;
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 480px;
+            padding: var(--spacing-md);
+            position: relative;
+            z-index: 1;
+        }
+
+        .auth-card {
+            padding: var(--spacing-xl);
+            box-shadow: var(--shadow-lg), var(--glow-orange);
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .auth-brand {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            color: var(--color-accent-primary);
+            text-shadow: var(--glow-orange);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .auth-subtitle {
+            color: var(--color-text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .role-badge-container {
+            text-align: center;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .auth-form {
+            margin-bottom: var(--spacing-md);
+        }
+
+        .auth-footer {
+            text-align: center;
+            padding-top: var(--spacing-md);
+            border-top: 1px solid var(--color-border);
+        }
+
+        .auth-footer p {
+            margin-bottom: var(--spacing-xs);
+            font-size: 0.95rem;
+        }
+
+        @media (max-width: 768px) {
+            .auth-card {
+                padding: var(--spacing-md);
+            }
+
+            .auth-brand {
+                font-size: 2rem;
+            }
+        }
+    </style>
+
+    <script type="module">
+        import { account, showLoading, hideLoading, showAlert, getUserRole, redirectToDashboard } from '/js/appwrite.js';
+        import { ID } from 'https://cdn.jsdelivr.net/npm/appwrite@14.0.1/+esm';
+
+        let sessionId = null;
+        let userId = null;
+
+        // Get selected role from session storage
+        const selectedRole = sessionStorage.getItem('selectedRole') || 'customer';
+        document.getElementById('roleBadge').textContent = selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1);
+
+        // Send OTP
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const emailPhone = document.getElementById('emailPhone').value.trim();
+
+            if (!emailPhone) {
+                showAlert('Please enter email or phone number', 'error');
+                return;
+            }
+
+            showLoading('Sending OTP...');
+
+            try {
+                // First, check if there's an existing session and delete it
+                try {
+                    const existingSession = await account.get();
+                    if (existingSession) {
+                        console.log('Existing session found, logging out...');
+                        await account.deleteSession('current');
+                    }
+                } catch (error) {
+                    // No existing session, continue
+                    console.log('No existing session');
+                }
+
+                // Check if it's email or phone
+                const isEmail = emailPhone.includes('@');
+
+                if (isEmail) {
+                    // Email OTP
+                    const token = await account.createEmailToken(
+                        ID.unique(),
+                        emailPhone
+                    );
+
+                    userId = token.userId;
+                    sessionId = token.$id;
+
+                    showAlert('OTP sent to your email! Check your inbox.', 'success');
+                } else {
+                    // Phone login
+                    let cleanPhone = emailPhone.replace(/\D/g, '');
+                    const formattedPhone = cleanPhone.startsWith('+') ? cleanPhone : `+91${cleanPhone}`;
+
+                    const session = await account.createPhoneSession(
+                        ID.unique(),
+                        formattedPhone
+                    );
+
+                    userId = session.userId;
+                    sessionId = session.$id;
+
+                    showAlert('OTP sent to your phone!', 'success');
+                }
+
+                // Show OTP form
+                document.getElementById('loginForm').classList.add('hidden');
+                document.getElementById('otpForm').classList.remove('hidden');
+
+            } catch (error) {
+                console.error('OTP send error:', error);
+                showAlert(error.message || 'Failed to send OTP. Please try again.', 'error');
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // Verify OTP
+        document.getElementById('otpForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const otpCode = document.getElementById('otpCode').value.trim();
+
+            if (!otpCode || otpCode.length !== 6) {
+                showAlert('Please enter a valid 6-digit OTP', 'error');
+                return;
+            }
+
+            showLoading('Verifying OTP...');
+
+            try {
+                // Verify OTP and create session
+                await account.createSession(userId, otpCode);
+
+                showAlert('Login successful!', 'success');
+
+                // Get user role and redirect
+                const user = await account.get();
+                const role = await getUserRole(user.$id);
+
+                if (role) {
+                    setTimeout(() => {
+                        redirectToDashboard(role);
+                    }, 1000);
+                } else {
+                    // New user - redirect to complete profile
+                    showAlert('Please complete your profile', 'info');
+                    setTimeout(() => {
+                        if (selectedRole === 'worker') {
+                            window.location.href = '/worker/profile.html?setup=true';
+                        } else if (selectedRole === 'customer') {
+                            window.location.href = '/customer/dashboard.html';
+                        } else {
+                            showAlert('Invalid role', 'error');
+                        }
+                    }, 1500);
+                }
+
+            } catch (error) {
+                console.error('OTP verification error:', error);
+                showAlert(error.message || 'Invalid OTP. Please try again.', 'error');
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // Resend OTP
+        document.getElementById('resendOtpBtn').addEventListener('click', () => {
+            document.getElementById('otpForm').classList.add('hidden');
+            document.getElementById('loginForm').classList.remove('hidden');
+            document.getElementById('otpCode').value = '';
+            showAlert('You can request a new OTP now', 'info');
+        });
+    </script>
+
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+        <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <svg id="moon-icon" class="hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+    </button>
+
+    <script type="module">
+        import { toggleTheme, initTheme } from '/js/theme.js';
+        window.toggleTheme = toggleTheme;
+        initTheme();
+    </script>
+
+</body>
+
+</html>

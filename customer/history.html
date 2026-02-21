@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Bookings - GOD Services</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container flex-between">
+            <div class="navbar-brand">GOD SERVICES</div>
+            <ul class="navbar-nav">
+                <li><a href="/customer/dashboard.html" class="nav-link">Dashboard</a></li>
+                <li><a href="/customer/services.html" class="nav-link">Services</a></li>
+                <li><a href="/customer/history.html" class="nav-link active">My Bookings</a></li>
+                <li><a href="/customer/profile.html" class="nav-link">Profile</a></li>
+                <li><button class="btn btn-ghost btn-sm" id="logoutBtn">Logout</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container" style="padding: var(--spacing-xl) var(--spacing-md);">
+
+        <!-- Header -->
+        <section class="page-header mb-lg">
+            <h1>My Bookings</h1>
+            <p class="text-secondary">Track and manage your service requests</p>
+        </section>
+
+        <!-- Filters -->
+        <section class="filters-section mb-lg">
+            <div class="filter-tabs">
+                <button class="filter-tab active" data-status="all">All</button>
+                <button class="filter-tab" data-status="pending">Pending</button>
+                <button class="filter-tab" data-status="accepted">Accepted</button>
+                <button class="filter-tab" data-status="completed">Completed</button>
+            </div>
+        </section>
+
+        <!-- Bookings List -->
+        <section class="bookings-list" id="bookingsList">
+            <!-- Bookings loaded here -->
+        </section>
+
+        <div id="emptyState" class="hidden">
+            <div class="empty-state">
+                <div class="empty-state-icon">📅</div>
+                <p>No bookings found.</p>
+                <a href="/customer/services.html" class="btn btn-primary mt-md">Book a Service</a>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Rating Modal -->
+    <div class="modal-overlay" id="ratingModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Rate This Worker</h3>
+                <button class="modal-close" id="closeRatingModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="text-secondary" style="text-align:center;margin-bottom:var(--spacing-lg);">How was your
+                    experience?</p>
+                <div class="star-rating" id="starRating">
+                    <span class="star-btn" data-value="1">☆</span>
+                    <span class="star-btn" data-value="2">☆</span>
+                    <span class="star-btn" data-value="3">☆</span>
+                    <span class="star-btn" data-value="4">☆</span>
+                    <span class="star-btn" data-value="5">☆</span>
+                </div>
+                <p class="rating-label" id="ratingLabel">Select a rating</p>
+                <button class="btn btn-primary btn-block mt-lg" id="submitRatingBtn" disabled>Submit Rating</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .page-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: var(--spacing-sm);
+            overflow-x: auto;
+            padding-bottom: var(--spacing-xs);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .filter-tab {
+            background: none;
+            border: none;
+            padding: var(--spacing-sm) var(--spacing-md);
+            cursor: pointer;
+            color: var(--color-text-secondary);
+            font-weight: 600;
+            border-bottom: 2px solid transparent;
+            transition: all var(--transition-fast);
+            white-space: nowrap;
+        }
+
+        .filter-tab:hover {
+            color: var(--color-text-primary);
+        }
+
+        .filter-tab.active {
+            color: var(--color-accent-primary);
+            border-bottom-color: var(--color-accent-primary);
+        }
+
+        .booking-card {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-md);
+            transition: all var(--transition-fast);
+        }
+
+        .booking-card:hover {
+            border-color: var(--color-accent-primary);
+            transform: translateY(-2px);
+        }
+
+        .booking-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-md);
+            padding-bottom: var(--spacing-sm);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .booking-service {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .booking-details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-md);
+        }
+
+        .detail-item label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--color-text-secondary);
+            margin-bottom: 0.25rem;
+        }
+
+        .detail-item span {
+            font-weight: 500;
+            color: var(--color-text-primary);
+        }
+
+        .payment-status-paid {
+            color: var(--color-success);
+        }
+
+        .payment-status-pending {
+            color: var(--color-warning);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: var(--spacing-xxl);
+            color: var(--color-text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .rate-btn {
+            margin-top: var(--spacing-md);
+            background: transparent;
+            border: 1px solid var(--color-accent-primary);
+            color: var(--color-accent-primary);
+            padding: var(--spacing-xs) var(--spacing-md);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all var(--transition-fast);
+        }
+
+        .rate-btn:hover {
+            background: var(--color-accent-primary);
+            color: var(--color-bg-primary);
+        }
+
+        .rated-display {
+            margin-top: var(--spacing-md);
+            font-size: 1.1rem;
+            color: var(--color-accent-primary);
+            font-weight: 600;
+        }
+
+        .star-rating {
+            display: flex;
+            justify-content: center;
+            gap: var(--spacing-sm);
+        }
+
+        .star-btn {
+            font-size: 2.5rem;
+            cursor: pointer;
+            color: var(--color-text-muted);
+            transition: color var(--transition-fast), transform var(--transition-fast);
+            user-select: none;
+        }
+
+        .star-btn:hover {
+            transform: scale(1.2);
+        }
+
+        .star-btn.active {
+            color: var(--color-accent-primary);
+        }
+
+        .rating-label {
+            text-align: center;
+            margin-top: var(--spacing-sm);
+            color: var(--color-text-secondary);
+            font-size: 0.95rem;
+        }
+
+        @media (max-width: 768px) {
+            .navbar-nav {
+                display: none;
+            }
+        }
+    </style>
+
+    <script type="module">
+        import { account, databases, APPWRITE_CONFIG, showLoading, hideLoading, showAlert, logout } from '/js/appwrite.js';
+        import { Query } from 'https://cdn.jsdelivr.net/npm/appwrite@14.0.1/+esm';
+
+        let currentUser = null;
+        let allBookings = [];
+
+        // Check auth and load bookings
+        async function init() {
+            showLoading('Loading your bookings...');
+            try {
+                // Auth check
+                try {
+                    currentUser = await account.get();
+                } catch (e) {
+                    window.location.href = '/login.html';
+                    return;
+                }
+
+                // Fetch bookings
+                try {
+                    // Try optimal query first
+                    const res = await databases.listDocuments(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.bookings,
+                        [
+                            Query.equal('customerId', currentUser.$id),
+                            Query.orderDesc('createdAt')
+                        ]
+                    );
+                    allBookings = res.documents;
+                } catch (e) {
+                    console.warn('Index missing, using fallback filtering');
+                    // Fallback: fetch all and filter
+                    const res = await databases.listDocuments(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.bookings,
+                        [Query.orderDesc('createdAt')]
+                    );
+                    allBookings = res.documents.filter(b => b.customerId === currentUser.$id);
+                }
+
+                renderBookings('all');
+
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Failed to load bookings', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Render bookings list
+        function renderBookings(statusFilter) {
+            const container = document.getElementById('bookingsList');
+            const emptyState = document.getElementById('emptyState');
+
+            const filtered = statusFilter === 'all'
+                ? allBookings
+                : allBookings.filter(b => b.status === statusFilter);
+
+            if (filtered.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            container.innerHTML = filtered.map(booking => {
+                const date = new Date(booking.createdAt).toLocaleDateString(undefined, {
+                    year: 'numeric', month: 'short', day: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                });
+
+                const statusColors = {
+                    pending: 'warning',
+                    accepted: 'info',
+                    completed: 'success',
+                    cancelled: 'error'
+                };
+
+                // Rating section for completed bookings
+                let ratingHtml = '';
+                if (booking.status === 'completed') {
+                    if (booking.rating) {
+                        const filledStars = '\u2605'.repeat(booking.rating);
+                        const emptyStars = '\u2606'.repeat(5 - booking.rating);
+                        ratingHtml = `<div class="rated-display">Rated: ${filledStars}${emptyStars}</div>`;
+                    } else {
+                        ratingHtml = `<button class="rate-btn" onclick="openRatingModal('${booking.$id}', '${booking.workerId}')">\u2b50 Rate Worker</button>`;
+                    }
+                }
+
+                return `
+                <div class="booking-card animate-fade-in">
+                    <div class="booking-header">
+                        <div class="booking-service">${booking.serviceCategory}</div>
+                        <span class="badge badge-${statusColors[booking.status] || 'default'}">${booking.status}</span>
+                    </div>
+                    <div class="booking-details-grid">
+                        <div class="detail-item">
+                            <label>Date & Time</label>
+                            <span>${date}</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Location</label>
+                            <span>${booking.location}</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Amount</label>
+                            <span>₹${booking.estimatedPrice}</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Payment</label>
+                            <span class="payment-status-${booking.utr ? 'paid' : (booking.paymentStatus || '').toLowerCase()}">
+                                ${booking.utr ? 'Paid' : (booking.paymentStatus || 'Pending')}
+                            </span>
+                        </div>
+                    </div>
+                    ${ratingHtml}
+                </div>
+                `;
+            }).join('');
+        }
+
+        // Filter tabs logic
+        document.querySelectorAll('.filter-tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                // Remove active class from all
+                document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                // Add to clicked
+                e.target.classList.add('active');
+                // Filter
+                renderBookings(e.target.dataset.status);
+            });
+        });
+
+        // === Rating System ===
+        let ratingBookingId = null;
+        let ratingWorkerId = null;
+        let selectedRating = 0;
+
+        const ratingLabels = {
+            1: 'Poor',
+            2: 'Below Average',
+            3: 'Average',
+            4: 'Good',
+            5: 'Excellent'
+        };
+
+        // Open rating modal
+        window.openRatingModal = function (bookingId, workerId) {
+            ratingBookingId = bookingId;
+            ratingWorkerId = workerId;
+            selectedRating = 0;
+
+            // Reset stars
+            document.querySelectorAll('.star-btn').forEach(s => {
+                s.textContent = '☆';
+                s.classList.remove('active');
+            });
+            document.getElementById('ratingLabel').textContent = 'Select a rating';
+            document.getElementById('submitRatingBtn').disabled = true;
+            document.getElementById('ratingModal').classList.add('active');
+        };
+
+        // Star hover and click
+        document.querySelectorAll('.star-btn').forEach(star => {
+            star.addEventListener('mouseenter', () => {
+                const val = parseInt(star.dataset.value);
+                highlightStars(val);
+            });
+
+            star.addEventListener('mouseleave', () => {
+                highlightStars(selectedRating);
+            });
+
+            star.addEventListener('click', () => {
+                selectedRating = parseInt(star.dataset.value);
+                highlightStars(selectedRating);
+                document.getElementById('ratingLabel').textContent = ratingLabels[selectedRating];
+                document.getElementById('submitRatingBtn').disabled = false;
+            });
+        });
+
+        function highlightStars(count) {
+            document.querySelectorAll('.star-btn').forEach(s => {
+                const val = parseInt(s.dataset.value);
+                if (val <= count) {
+                    s.textContent = '★';
+                    s.classList.add('active');
+                } else {
+                    s.textContent = '☆';
+                    s.classList.remove('active');
+                }
+            });
+        }
+
+        // Close rating modal
+        document.getElementById('closeRatingModal').addEventListener('click', () => {
+            document.getElementById('ratingModal').classList.remove('active');
+        });
+
+        // Submit rating
+        document.getElementById('submitRatingBtn').addEventListener('click', async () => {
+            if (!selectedRating || !ratingBookingId) return;
+
+            showLoading('Submitting rating...');
+
+            try {
+                // 1. Save rating on the booking document
+                await databases.updateDocument(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.bookings,
+                    ratingBookingId,
+                    { rating: selectedRating }
+                );
+
+                // 2. Recalculate worker's average rating
+                // Fetch all completed bookings for this worker that have a rating
+                let ratedBookings = [];
+                try {
+                    const res = await databases.listDocuments(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.bookings,
+                        [
+                            Query.equal('workerId', ratingWorkerId),
+                            Query.equal('status', 'completed'),
+                            Query.limit(100)
+                        ]
+                    );
+                    ratedBookings = res.documents.filter(b => b.rating && b.rating > 0);
+                } catch (e) {
+                    // Fallback: fetch all bookings and filter client-side
+                    const res = await databases.listDocuments(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.bookings,
+                        [Query.limit(100)]
+                    );
+                    ratedBookings = res.documents.filter(b =>
+                        b.workerId === ratingWorkerId &&
+                        b.status === 'completed' &&
+                        b.rating && b.rating > 0
+                    );
+                }
+
+                // Calculate average
+                const totalRating = ratedBookings.reduce((sum, b) => sum + b.rating, 0);
+                const avgRating = ratedBookings.length > 0 ? totalRating / ratedBookings.length : 0;
+
+                // 3. Update the worker document's rating directly
+                // workerId on the booking IS the worker document's $id
+                try {
+                    await databases.updateDocument(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.workers,
+                        ratingWorkerId,
+                        { rating: parseFloat(avgRating.toFixed(1)) }
+                    );
+                    console.log('Worker rating updated successfully to', avgRating);
+                } catch (e) {
+                    console.error('Failed to update worker rating:', e);
+                }
+
+                // Update local data and re-render
+                const localBooking = allBookings.find(b => b.$id === ratingBookingId);
+                if (localBooking) localBooking.rating = selectedRating;
+
+                // Close modal
+                document.getElementById('ratingModal').classList.remove('active');
+                showAlert('Rating submitted successfully!', 'success');
+
+                // Re-render
+                const activeTab = document.querySelector('.filter-tab.active');
+                renderBookings(activeTab ? activeTab.dataset.status : 'all');
+
+            } catch (error) {
+                console.error('Error submitting rating:', error);
+                showAlert(`Failed to submit rating: ${error.message}`, 'error');
+            } finally {
+                hideLoading();
+            }
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+        init();
+    </script>
+
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+        <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <svg id="moon-icon" class="hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+    </button>
+
+    <script type="module">
+        import { toggleTheme, initTheme } from '/js/theme.js';
+        window.toggleTheme = toggleTheme;
+        initTheme();
+    </script>
+
+</body>
+
+</html>

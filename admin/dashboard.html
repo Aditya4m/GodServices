@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - GOD Services</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container flex-between">
+            <div class="navbar-brand">GOD SERVICES - ADMIN</div>
+            <ul class="navbar-nav">
+                <li><a href="/admin/dashboard.html" class="nav-link active">Dashboard</a></li>
+                <li><a href="/admin/workers.html" class="nav-link">Workers</a></li>
+                <li><a href="/admin/customers.html" class="nav-link">Customers</a></li>
+                <li><a href="/admin/bookings.html" class="nav-link">Bookings</a></li>
+                <li><a href="/admin/services.html" class="nav-link">Services</a></li>
+                <li><a href="/admin/analytics.html" class="nav-link">Analytics</a></li>
+                <li><button class="btn btn-ghost btn-sm" id="logoutBtn">Logout</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container" style="padding: var(--spacing-xl) var(--spacing-md);">
+
+        <!-- Welcome Section -->
+        <section class="welcome-section">
+            <h1>Admin Control Panel</h1>
+            <p class="text-secondary">Platform Overview & Management</p>
+        </section>
+
+        <!-- Platform Stats -->
+        <section class="stats-section grid grid-4 gap-md mt-lg">
+            <div class="stat-card">
+                <div class="stat-value" id="totalWorkers">0</div>
+                <div class="stat-label">Total Workers</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalCustomers">0</div>
+                <div class="stat-label">Total Customers</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalBookings">0</div>
+                <div class="stat-label">Total Bookings</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="platformRevenue">₹0</div>
+                <div class="stat-label">Platform Revenue</div>
+            </div>
+        </section>
+
+        <!-- Quick Actions -->
+        <section class="quick-actions mt-xl">
+            <h2>Quick Actions</h2>
+            <div class="grid grid-3 gap-md mt-md">
+
+                <div class="action-card card">
+                    <div class="action-icon">👷</div>
+                    <h4>Pending Approvals</h4>
+                    <p class="text-secondary mb-md"><span id="pendingApprovals">0</span> workers awaiting approval</p>
+                    <a href="/admin/workers.html" class="btn btn-primary btn-block">Review Workers</a>
+                </div>
+
+                <div class="action-card card">
+                    <div class="action-icon">📋</div>
+                    <h4>Active Bookings</h4>
+                    <p class="text-secondary mb-md"><span id="activeBookings">0</span> bookings in progress</p>
+                    <a href="/admin/bookings.html" class="btn btn-primary btn-block">Manage Bookings</a>
+                </div>
+
+                <div class="action-card card">
+                    <div class="action-icon">⚙️</div>
+                    <h4>Service Categories</h4>
+                    <p class="text-secondary mb-md">Manage service offerings</p>
+                    <a href="/admin/services.html" class="btn btn-primary btn-block">Manage Services</a>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Recent Activity -->
+        <section class="activity-section mt-xl">
+            <h2>Recent Activity</h2>
+            <div class="card mt-md" style="padding: var(--spacing-lg);">
+                <div id="activityFeed">
+                    <!-- Activity will be loaded dynamically -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Platform Health -->
+        <section class="health-section mt-xl">
+            <h2>Platform Health</h2>
+            <div class="grid grid-2 gap-md mt-md">
+
+                <div class="health-card card">
+                    <h4>Worker Status</h4>
+                    <div class="health-stats">
+                        <div class="health-stat">
+                            <span class="health-label">Active Workers:</span>
+                            <span class="health-value text-success" id="activeWorkers">0</span>
+                        </div>
+                        <div class="health-stat">
+                            <span class="health-label">Busy Workers:</span>
+                            <span class="health-value text-warning" id="busyWorkers">0</span>
+                        </div>
+                        <div class="health-stat">
+                            <span class="health-label">Approval Rate:</span>
+                            <span class="health-value text-primary" id="approvalRate">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="health-card card">
+                    <h4>Booking Status</h4>
+                    <div class="health-stats">
+                        <div class="health-stat">
+                            <span class="health-label">Pending:</span>
+                            <span class="health-value text-warning" id="pendingBookings">0</span>
+                        </div>
+                        <div class="health-stat">
+                            <span class="health-label">Completed Today:</span>
+                            <span class="health-value text-success" id="completedToday">0</span>
+                        </div>
+                        <div class="health-stat">
+                            <span class="health-label">Success Rate:</span>
+                            <span class="health-value text-primary" id="successRate">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <style>
+        .welcome-section h1 {
+            font-size: 2.5rem;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .quick-actions,
+        .activity-section,
+        .health-section {
+            margin-top: var(--spacing-xxl);
+        }
+
+        .quick-actions h2,
+        .activity-section h2,
+        .health-section h2 {
+            margin-bottom: var(--spacing-lg);
+            padding-bottom: var(--spacing-sm);
+            border-bottom: 2px solid var(--color-border);
+        }
+
+        .action-card {
+            text-align: center;
+            padding: var(--spacing-xl);
+        }
+
+        .action-icon {
+            font-size: 3.5rem;
+            margin-bottom: var(--spacing-md);
+            filter: grayscale(1);
+            transition: filter var(--transition-normal);
+        }
+
+        .action-card:hover .action-icon {
+            filter: grayscale(0);
+        }
+
+        .action-card h4 {
+            font-size: 1.25rem;
+            margin-bottom: var(--spacing-sm);
+            color: var(--color-text-primary);
+        }
+
+        .activity-item {
+            padding: var(--spacing-sm) 0;
+            border-bottom: 1px solid var(--color-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-text {
+            color: var(--color-text-primary);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .activity-time {
+            color: var(--color-text-muted);
+            font-size: 0.85rem;
+        }
+
+        .health-card {
+            padding: var(--spacing-lg);
+        }
+
+        .health-card h4 {
+            font-size: 1.25rem;
+            margin-bottom: var(--spacing-md);
+            color: var(--color-accent-primary);
+        }
+
+        .health-stats {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+
+        .health-stat {
+            display: flex;
+            justify-content: space-between;
+            padding: var(--spacing-xs) 0;
+        }
+
+        .health-label {
+            color: var(--color-text-secondary);
+        }
+
+        .health-value {
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 768px) {
+            .navbar-nav {
+                display: none;
+            }
+        }
+    </style>
+
+    <script type="module">
+        import { account, databases, APPWRITE_CONFIG, showLoading, hideLoading, showAlert, logout } from '/js/appwrite.js';
+        import { Query } from 'https://cdn.jsdelivr.net/npm/appwrite@14.0.1/+esm';
+
+        let currentUser = null;
+
+        // Initialize
+        async function init() {
+            showLoading('Loading admin dashboard...');
+
+            try {
+                currentUser = await account.get();
+
+                // Verify admin role
+                const userResponse = await databases.listDocuments(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.users,
+                    [Query.equal('userId', currentUser.$id)]
+                );
+
+                if (userResponse.documents.length === 0 || userResponse.documents[0].role !== 'admin') {
+                    showAlert('Unauthorized access. Admin only.', 'error');
+                    setTimeout(() => {
+                        window.location.href = '/index.html';
+                    }, 2000);
+                    return;
+                }
+
+                // Load all dashboard data
+                await Promise.all([
+                    loadPlatformStats(),
+                    loadQuickActions(),
+                    loadRecentActivity(),
+                    loadPlatformHealth()
+                ]);
+
+            } catch (error) {
+                console.error('Initialization error:', error);
+                showAlert('Failed to load admin dashboard. Please try again.', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Load platform statistics
+        async function loadPlatformStats() {
+            try {
+                const [workersRes, customersRes, bookingsRes] = await Promise.all([
+                    databases.listDocuments(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.workers),
+                    databases.listDocuments(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.users, [Query.equal('role', 'customer')]),
+                    databases.listDocuments(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.bookings)
+                ]);
+
+                document.getElementById('totalWorkers').textContent = workersRes.total;
+                document.getElementById('totalCustomers').textContent = customersRes.total;
+                document.getElementById('totalBookings').textContent = bookingsRes.total;
+
+                const revenue = bookingsRes.documents
+                    .filter(b => b.status === 'completed')
+                    .reduce((sum, b) => sum + (b.estimatedPrice || 0), 0);
+
+                document.getElementById('platformRevenue').textContent = `₹${revenue.toLocaleString()}`;
+
+            } catch (error) {
+                console.error('Error loading platform stats:', error);
+            }
+        }
+
+        // Load quick actions data
+        async function loadQuickActions() {
+            try {
+                const [workersRes, bookingsRes] = await Promise.all([
+                    databases.listDocuments(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.workers,
+                        [Query.equal('isApproved', false)]
+                    ),
+                    databases.listDocuments(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.bookings,
+                        [Query.equal('status', 'accepted')]
+                    )
+                ]);
+
+                document.getElementById('pendingApprovals').textContent = workersRes.total;
+                document.getElementById('activeBookings').textContent = bookingsRes.total;
+
+            } catch (error) {
+                console.error('Error loading quick actions:', error);
+            }
+        }
+
+        // Load recent activity
+        async function loadRecentActivity() {
+            try {
+                const bookingsRes = await databases.listDocuments(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.bookings,
+                    [
+                        Query.orderDesc('createdAt'),
+                        Query.limit(10)
+                    ]
+                );
+
+                const activityFeed = document.getElementById('activityFeed');
+
+                if (bookingsRes.documents.length === 0) {
+                    activityFeed.innerHTML = '<p class="text-muted">No recent activity</p>';
+                    return;
+                }
+
+                activityFeed.innerHTML = '';
+
+                bookingsRes.documents.forEach(booking => {
+                    const activityItem = document.createElement('div');
+                    activityItem.className = 'activity-item';
+
+                    const statusIcons = {
+                        pending: '⏳',
+                        accepted: '✅',
+                        completed: '🎉',
+                        cancelled: '❌'
+                    };
+
+                    activityItem.innerHTML = `
+            <div class="activity-content">
+              <div class="activity-text">
+                ${statusIcons[booking.status]} New ${booking.serviceCategory} booking - ${booking.status}
+              </div>
+              <div class="activity-time">${new Date(booking.createdAt).toLocaleString()}</div>
+            </div>
+            <span class="badge badge-${booking.status === 'completed' ? 'success' : booking.status === 'pending' ? 'warning' : 'info'}">
+              ${booking.status}
+            </span>
+          `;
+
+                    activityFeed.appendChild(activityItem);
+                });
+
+            } catch (error) {
+                console.error('Error loading recent activity:', error);
+            }
+        }
+
+        // Load platform health
+        async function loadPlatformHealth() {
+            try {
+                const [workersRes, bookingsRes] = await Promise.all([
+                    databases.listDocuments(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.workers),
+                    databases.listDocuments(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.bookings)
+                ]);
+
+                const workers = workersRes.documents;
+                const bookings = bookingsRes.documents;
+
+                // Worker stats
+                const activeWorkers = workers.filter(w => w.isApproved && w.isActive).length;
+                const busyWorkers = workers.filter(w => w.isApproved && !w.isActive).length;
+                const approvalRate = workers.length > 0 ? ((workers.filter(w => w.isApproved).length / workers.length) * 100).toFixed(1) : 0;
+
+                document.getElementById('activeWorkers').textContent = activeWorkers;
+                document.getElementById('busyWorkers').textContent = busyWorkers;
+                document.getElementById('approvalRate').textContent = `${approvalRate}%`;
+
+                // Booking stats
+                const pendingBookings = bookings.filter(b => b.status === 'pending').length;
+
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const completedToday = bookings.filter(b => {
+                    const updatedDate = new Date(b.updatedAt);
+                    return b.status === 'completed' && updatedDate >= today;
+                }).length;
+
+                const successRate = bookings.length > 0 ? ((bookings.filter(b => b.status === 'completed').length / bookings.length) * 100).toFixed(1) : 0;
+
+                document.getElementById('pendingBookings').textContent = pendingBookings;
+                document.getElementById('completedToday').textContent = completedToday;
+                document.getElementById('successRate').textContent = `${successRate}%`;
+
+            } catch (error) {
+                console.error('Error loading platform health:', error);
+            }
+        }
+
+        // Logout handler
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+
+        // Initialize on page load
+        init();
+    </script>
+
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+        <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <svg id="moon-icon" class="hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+    </button>
+
+    <script type="module">
+        import { toggleTheme, initTheme } from '/js/theme.js';
+        window.toggleTheme = toggleTheme;
+        initTheme();
+    </script>
+
+</body>
+
+</html>

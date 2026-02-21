@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - GOD Services</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+    <div class="auth-container">
+        <div class="auth-card card-glass">
+
+            <!-- Header -->
+            <div class="auth-header">
+                <h1 class="auth-brand">GOD SERVICES</h1>
+                <p class="auth-subtitle">Create your account</p>
+            </div>
+
+            <!-- Role Badge -->
+            <div class="role-badge-container">
+                <span class="badge badge-primary" id="roleBadge">Customer</span>
+            </div>
+
+            <!-- Registration Form -->
+            <form id="registerForm" class="auth-form">
+
+                <!-- Name -->
+                <div class="form-group">
+                    <label class="form-label" for="name">Full Name</label>
+                    <input type="text" id="name" class="form-input" placeholder="Enter your full name" required>
+                </div>
+
+                <!-- Email -->
+                <div class="form-group">
+                    <label class="form-label" for="email">Email</label>
+                    <input type="email" id="email" class="form-input" placeholder="your.email@example.com" required>
+                </div>
+
+                <!-- Phone -->
+                <div class="form-group">
+                    <label class="form-label" for="phone">Phone Number</label>
+                    <input type="tel" id="phone" class="form-input" placeholder="+91 XXXXXXXXXX" required>
+                </div>
+
+                <!-- Worker-specific fields -->
+                <div id="workerFields" class="hidden">
+
+                    <div class="form-group">
+                        <label class="form-label" for="skillCategory">Skill Category</label>
+                        <select id="skillCategory" class="form-select">
+                            <option value="">Select your skill</option>
+                            <option value="plumber">Plumber</option>
+                            <option value="electrician">Electrician</option>
+                            <option value="ac-technician">AC Technician</option>
+                            <option value="carpenter">Carpenter</option>
+                            <option value="painter">Painter</option>
+                            <option value="cleaner">Cleaner</option>
+                            <option value="gardener">Gardener</option>
+                            <option value="mechanic">Mechanic</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="experience">Experience (Years)</label>
+                        <input type="number" id="experience" class="form-input" placeholder="Years of experience"
+                            min="0" max="50">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="serviceArea">Service Area (Pincode)</label>
+                        <input type="text" id="serviceArea" class="form-input" placeholder="e.g., 110001, 110002">
+                        <p class="form-hint">Separate multiple pincodes with commas</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="charges">Expected Charges (₹/hour)</label>
+                        <input type="number" id="charges" class="form-input" placeholder="e.g., 500" min="0">
+                    </div>
+
+                </div>
+
+                <!-- Customer-specific fields -->
+                <div id="customerFields" class="hidden">
+
+                    <div class="form-group">
+                        <label class="form-label" for="address">Address</label>
+                        <textarea id="address" class="form-textarea" placeholder="Enter your address"
+                            rows="3"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="pincode">Pincode</label>
+                        <input type="text" id="pincode" class="form-input" placeholder="e.g., 110001"
+                            pattern="[0-9]{6}">
+                    </div>
+
+                </div>
+
+                <!-- Terms -->
+                <div class="form-group">
+                    <label class="flex" style="align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" id="terms" required>
+                        <span style="color: var(--color-text-secondary); font-size: 0.9rem;">
+                            I agree to the <a href="#" class="text-primary">Terms & Conditions</a>
+                        </span>
+                    </label>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn btn-primary btn-block" id="registerBtn">
+                    Create Account
+                </button>
+
+            </form>
+
+            <!-- OTP Verification Form (Hidden Initially) -->
+            <form id="otpForm" class="auth-form hidden">
+
+                <div class="form-group">
+                    <label class="form-label" for="otpCode">Enter OTP</label>
+                    <input type="text" id="otpCode" class="form-input" placeholder="6-digit code" maxlength="6"
+                        pattern="[0-9]{6}" required>
+                    <p class="form-hint">Check your email for the verification code</p>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block" id="verifyOtpBtn">
+                    Verify & Complete Registration
+                </button>
+
+                <button type="button" class="btn btn-ghost btn-block" id="resendOtpBtn">
+                    Resend OTP
+                </button>
+
+            </form>
+
+            <!-- Footer -->
+            <div class="auth-footer">
+                <p>Already have an account? <a href="/login.html" class="text-primary">Login here</a></p>
+                <p><a href="/index.html" class="text-secondary">← Back to home</a></p>
+            </div>
+
+        </div>
+    </div>
+
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: var(--spacing-md) 0;
+            background: linear-gradient(135deg, var(--color-bg-primary) 0%, var(--color-bg-secondary) 100%);
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        [data-theme="light"] body {
+            background: #ffffff;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 107, 0, 0.05) 0%, transparent 70%);
+            animation: pulse 6s ease-in-out infinite;
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 520px;
+            padding: var(--spacing-md);
+            position: relative;
+            z-index: 1;
+        }
+
+        .auth-card {
+            padding: var(--spacing-xl);
+            box-shadow: var(--shadow-lg), var(--glow-orange);
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .auth-brand {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            color: var(--color-accent-primary);
+            text-shadow: var(--glow-orange);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .auth-subtitle {
+            color: var(--color-text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .role-badge-container {
+            text-align: center;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .auth-form {
+            margin-bottom: var(--spacing-md);
+        }
+
+        .auth-footer {
+            text-align: center;
+            padding-top: var(--spacing-md);
+            border-top: 1px solid var(--color-border);
+        }
+
+        .auth-footer p {
+            margin-bottom: var(--spacing-xs);
+            font-size: 0.95rem;
+        }
+
+        @media (max-width: 768px) {
+            .auth-card {
+                padding: var(--spacing-md);
+            }
+
+            .auth-brand {
+                font-size: 2rem;
+            }
+        }
+    </style>
+
+    <script type="module">
+        import { account, databases, APPWRITE_CONFIG, showLoading, hideLoading, showAlert, Query } from '/js/appwrite.js';
+        import { ID } from 'https://cdn.jsdelivr.net/npm/appwrite@14.0.1/+esm';
+
+        let registrationData = {};
+        let sessionId = null;
+        let userId = null;
+
+        // Check if user is already logged in - logout to allow registration
+        (async () => {
+            try {
+                const user = await account.get();
+                if (user) {
+                    // Logout existing session to allow new registration
+                    await account.deleteSession('current');
+                }
+            } catch (error) {
+                // No active session, continue with registration
+            }
+        })();
+
+        // Get selected role from session storage
+        const selectedRole = sessionStorage.getItem('selectedRole') || 'customer';
+        document.getElementById('roleBadge').textContent = selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1);
+
+        // Show role-specific fields
+        if (selectedRole === 'worker') {
+            document.getElementById('workerFields').classList.remove('hidden');
+        } else if (selectedRole === 'customer') {
+            document.getElementById('customerFields').classList.remove('hidden');
+        }
+
+        // Handle registration form submission
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Collect form data
+            registrationData = {
+                name: document.getElementById('name').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                phone: document.getElementById('phone').value.trim(),
+                role: selectedRole
+            };
+
+            // Collect role-specific data
+            if (selectedRole === 'worker') {
+                registrationData.skillCategory = document.getElementById('skillCategory').value;
+                registrationData.experience = parseInt(document.getElementById('experience').value) || 0;
+                registrationData.serviceArea = document.getElementById('serviceArea').value.split(',').map(p => p.trim());
+                registrationData.charges = parseInt(document.getElementById('charges').value) || 0;
+
+                if (!registrationData.skillCategory) {
+                    showAlert('Please select a skill category', 'error');
+                    return;
+                }
+            } else if (selectedRole === 'customer') {
+                registrationData.address = document.getElementById('address').value.trim();
+                registrationData.pincode = document.getElementById('pincode').value.trim();
+            }
+
+            showLoading('Sending verification code...');
+
+            try {
+                // Send OTP via email
+                const token = await account.createEmailToken(
+                    ID.unique(),
+                    registrationData.email
+                );
+
+                userId = token.userId;
+                sessionId = token.$id;
+
+                showAlert('Verification code sent to your email!', 'success');
+
+                // Show OTP form
+                document.getElementById('registerForm').classList.add('hidden');
+                document.getElementById('otpForm').classList.remove('hidden');
+
+            } catch (error) {
+                console.error('Registration error:', error);
+                showAlert(error.message || 'Registration failed. Please try again.', 'error');
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // Verify OTP and complete registration
+        document.getElementById('otpForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const otpCode = document.getElementById('otpCode').value.trim();
+
+            if (!otpCode || otpCode.length !== 6) {
+                showAlert('Please enter a valid 6-digit OTP', 'error');
+                return;
+            }
+
+            showLoading('Verifying and creating account...');
+
+            try {
+                // Verify OTP and create session
+                await account.createSession(userId, otpCode);
+
+                // Get authenticated user
+                const user = await account.get();
+
+                // Check if user already exists in database
+                const existingUsers = await databases.listDocuments(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.users,
+                    [Query.equal('userId', user.$id)]
+                );
+
+                if (existingUsers.documents.length > 0) {
+                    showAlert('Account already exists. Redirecting to dashboard...', 'info');
+                    hideLoading();
+                    setTimeout(() => {
+                        if (registrationData.role === 'worker') {
+                            window.location.href = '/worker/dashboard.html';
+                        } else if (registrationData.role === 'customer') {
+                            window.location.href = '/customer/dashboard.html';
+                        }
+                    }, 1500);
+                    return;
+                }
+
+                // Create user record in database
+                await databases.createDocument(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.users,
+                    ID.unique(),
+                    {
+                        userId: user.$id,
+                        role: registrationData.role,
+                        name: registrationData.name,
+                        email: registrationData.email,
+                        phone: registrationData.phone,
+                        createdAt: new Date().toISOString()
+                    }
+                );
+
+                // Create role-specific record
+                if (registrationData.role === 'worker') {
+                    await databases.createDocument(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.workers,
+                        ID.unique(),
+                        {
+                            userId: user.$id,
+                            skillCategory: registrationData.skillCategory,
+                            experience: registrationData.experience,
+                            serviceArea: registrationData.serviceArea,
+                            charges: registrationData.charges,
+                            isApproved: false, // Requires admin approval
+                            isActive: false,
+                            rating: 0,
+                            completedJobs: 0
+                        }
+                    );
+
+                    showAlert('Registration successful! Awaiting admin approval.', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/worker/dashboard.html';
+                    }, 2000);
+
+                } else if (registrationData.role === 'customer') {
+                    await databases.createDocument(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.customers,
+                        ID.unique(),
+                        {
+                            userId: user.$id,
+                            address: registrationData.address || '',
+                            pincode: registrationData.pincode || '',
+                            completedJobs: 0
+                        }
+                    );
+
+                    showAlert('Registration successful! Welcome to GOD Services.', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/customer/dashboard.html';
+                    }, 2000);
+                }
+
+            } catch (error) {
+                console.error('Verification error:', error);
+                showAlert(error.message || 'Verification failed. Please try again.', 'error');
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // Resend OTP
+        document.getElementById('resendOtpBtn').addEventListener('click', () => {
+            document.getElementById('otpForm').classList.add('hidden');
+            document.getElementById('registerForm').classList.remove('hidden');
+            document.getElementById('otpCode').value = '';
+            showAlert('You can request a new verification code now', 'info');
+        });
+    </script>
+
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+        <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <svg id="moon-icon" class="hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+    </button>
+
+    <script type="module">
+        import { toggleTheme, initTheme } from '/js/theme.js';
+        window.toggleTheme = toggleTheme;
+        initTheme();
+    </script>
+
+</body>
+
+</html>

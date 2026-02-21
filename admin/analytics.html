@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - GOD Services Admin</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container flex-between">
+            <div class="navbar-brand">GOD SERVICES - ADMIN</div>
+            <ul class="navbar-nav">
+                <li><a href="/admin/dashboard.html" class="nav-link">Dashboard</a></li>
+                <li><a href="/admin/workers.html" class="nav-link">Workers</a></li>
+                <li><a href="/admin/customers.html" class="nav-link">Customers</a></li>
+                <li><a href="/admin/bookings.html" class="nav-link">Bookings</a></li>
+                <li><a href="/admin/services.html" class="nav-link">Services</a></li>
+                <li><a href="/admin/analytics.html" class="nav-link active">Analytics</a></li>
+                <li><button class="btn btn-ghost btn-sm" id="logoutBtn">Logout</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container" style="padding: var(--spacing-xl) var(--spacing-md);">
+
+        <!-- Header -->
+        <section class="page-header">
+            <h1>Platform Analytics</h1>
+            <p class="text-secondary">Insights and performance metrics for your platform</p>
+        </section>
+
+        <!-- Overview Stats -->
+        <section class="stats-section grid grid-4 gap-md mt-lg">
+            <div class="stat-card stat-highlight">
+                <div class="stat-icon">👥</div>
+                <div class="stat-value" id="totalUsers">0</div>
+                <div class="stat-label">Total Users</div>
+            </div>
+            <div class="stat-card stat-highlight">
+                <div class="stat-icon">💰</div>
+                <div class="stat-value" id="totalRevenue">₹0</div>
+                <div class="stat-label">Total Revenue</div>
+            </div>
+            <div class="stat-card stat-highlight">
+                <div class="stat-icon">📊</div>
+                <div class="stat-value" id="avgBookingValue">₹0</div>
+                <div class="stat-label">Avg. Booking Value</div>
+            </div>
+            <div class="stat-card stat-highlight">
+                <div class="stat-icon">✅</div>
+                <div class="stat-value" id="completionRate">0%</div>
+                <div class="stat-label">Completion Rate</div>
+            </div>
+        </section>
+
+        <!-- Booking Status Breakdown -->
+        <section class="analytics-section mt-xl">
+            <h2>Booking Status Breakdown</h2>
+            <div class="grid grid-4 gap-md mt-md" id="statusBreakdown">
+                <!-- Loaded dynamically -->
+            </div>
+        </section>
+
+        <!-- Revenue by Category -->
+        <section class="analytics-section mt-xl">
+            <h2>Revenue by Service Category</h2>
+            <div class="analytics-table-wrapper mt-md">
+                <table class="analytics-table" id="revenueTable">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Bookings</th>
+                            <th>Completed</th>
+                            <th>Revenue</th>
+                            <th>Share</th>
+                        </tr>
+                    </thead>
+                    <tbody id="revenueTableBody">
+                        <!-- Loaded dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Top Workers -->
+        <section class="analytics-section mt-xl">
+            <h2>Top Performing Workers</h2>
+            <div class="analytics-table-wrapper mt-md">
+                <table class="analytics-table" id="workersTable">
+                    <thead>
+                        <tr>
+                            <th>Worker</th>
+                            <th>Category</th>
+                            <th>Completed Jobs</th>
+                            <th>Rating</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="workersTableBody">
+                        <!-- Loaded dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Recent Activity Timeline -->
+        <section class="analytics-section mt-xl">
+            <h2>Recent Bookings (Last 7 Days)</h2>
+            <div class="grid grid-7 gap-sm mt-md" id="weeklyChart">
+                <!-- Loaded dynamically -->
+            </div>
+        </section>
+
+    </main>
+
+    <style>
+        .page-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .analytics-section {
+            margin-top: var(--spacing-xxl);
+        }
+
+        .analytics-section h2 {
+            margin-bottom: var(--spacing-lg);
+            padding-bottom: var(--spacing-sm);
+            border-bottom: 2px solid var(--color-border);
+        }
+
+        /* Enhanced stat cards */
+        .stat-highlight {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-highlight::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--color-accent-primary), transparent);
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+            margin-bottom: var(--spacing-sm);
+            filter: grayscale(0.3);
+        }
+
+        /* Status breakdown cards */
+        .status-card {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            text-align: center;
+            transition: all var(--transition-fast);
+        }
+
+        .status-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .status-count {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .status-label {
+            font-size: 0.85rem;
+            color: var(--color-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .status-bar {
+            height: 4px;
+            border-radius: 2px;
+            margin-top: var(--spacing-sm);
+            background: var(--color-bg-elevated);
+            overflow: hidden;
+        }
+
+        .status-bar-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 1s ease;
+        }
+
+        .status-pending .status-count {
+            color: var(--color-warning, #f59e0b);
+        }
+
+        .status-pending .status-bar-fill {
+            background: var(--color-warning, #f59e0b);
+        }
+
+        .status-accepted .status-count {
+            color: var(--color-info, #3b82f6);
+        }
+
+        .status-accepted .status-bar-fill {
+            background: var(--color-info, #3b82f6);
+        }
+
+        .status-completed .status-count {
+            color: var(--color-success, #10b981);
+        }
+
+        .status-completed .status-bar-fill {
+            background: var(--color-success, #10b981);
+        }
+
+        .status-cancelled .status-count {
+            color: var(--color-error, #ef4444);
+        }
+
+        .status-cancelled .status-bar-fill {
+            background: var(--color-error, #ef4444);
+        }
+
+        /* Tables */
+        .analytics-table-wrapper {
+            overflow-x: auto;
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+        }
+
+        .analytics-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .analytics-table th,
+        .analytics-table td {
+            padding: var(--spacing-md) var(--spacing-lg);
+            text-align: left;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .analytics-table th {
+            font-family: var(--font-display);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--color-text-secondary);
+            background: var(--color-bg-elevated);
+            font-weight: 700;
+        }
+
+        .analytics-table td {
+            font-size: 0.95rem;
+            color: var(--color-text-primary);
+        }
+
+        .analytics-table tbody tr {
+            transition: background var(--transition-fast);
+        }
+
+        .analytics-table tbody tr:hover {
+            background: var(--color-bg-elevated);
+        }
+
+        .analytics-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .revenue-bar {
+            display: inline-block;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--color-accent-primary);
+            margin-left: var(--spacing-sm);
+            vertical-align: middle;
+            transition: width 1s ease;
+        }
+
+        /* Weekly chart */
+        .grid-7 {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+        }
+
+        .day-bar {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md);
+            text-align: center;
+            min-height: 180px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            gap: var(--spacing-sm);
+            transition: all var(--transition-fast);
+        }
+
+        .day-bar:hover {
+            border-color: var(--color-accent-primary);
+            box-shadow: var(--shadow-md);
+        }
+
+        .bar-fill {
+            width: 40px;
+            background: linear-gradient(180deg, var(--color-accent-primary), var(--color-accent-hover, #d97706));
+            border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+            transition: height 1s ease;
+            min-height: 4px;
+        }
+
+        .bar-count {
+            font-family: var(--font-display);
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--color-accent-primary);
+        }
+
+        .bar-day {
+            font-size: 0.75rem;
+            color: var(--color-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .empty-row td {
+            text-align: center;
+            color: var(--color-text-muted);
+            padding: var(--spacing-xl) !important;
+        }
+
+        @media (max-width: 768px) {
+            .navbar-nav {
+                display: none;
+            }
+
+            .grid-7 {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .analytics-table th:nth-child(5),
+            .analytics-table td:nth-child(5) {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .grid-7 {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+
+    <script type="module">
+        import { account, databases, APPWRITE_CONFIG, showLoading, hideLoading, showAlert, logout } from '/js/appwrite.js';
+        import { Query } from 'https://cdn.jsdelivr.net/npm/appwrite@14.0.1/+esm';
+
+        let allBookings = [];
+        let allWorkers = [];
+        let allCustomers = [];
+        let allUsers = [];
+
+        const serviceCategories = [
+            'plumber', 'electrician', 'ac-technician', 'carpenter',
+            'painter', 'cleaner', 'gardener', 'mechanic'
+        ];
+
+        const categoryNames = {
+            'plumber': '🔧 Plumber',
+            'electrician': '⚡ Electrician',
+            'ac-technician': '❄️ AC Technician',
+            'carpenter': '🪚 Carpenter',
+            'painter': '🎨 Painter',
+            'cleaner': '🧹 Cleaner',
+            'gardener': '🌱 Gardener',
+            'mechanic': '🔩 Mechanic'
+        };
+
+        async function init() {
+            showLoading('Loading analytics...');
+
+            try {
+                const currentUser = await account.get();
+
+                // Verify admin (with fallback)
+                let isAdmin = false;
+                try {
+                    const userResponse = await databases.listDocuments(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.users,
+                        [Query.equal('userId', currentUser.$id)]
+                    );
+                    isAdmin = userResponse.documents.length > 0 && userResponse.documents[0].role === 'admin';
+                } catch (queryError) {
+                    console.warn('userId query failed, using fallback:', queryError);
+                    const allUsersRes = await databases.listDocuments(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.users
+                    );
+                    const adminUser = allUsersRes.documents.find(u => u.userId === currentUser.$id);
+                    isAdmin = adminUser && adminUser.role === 'admin';
+                }
+
+                if (!isAdmin) {
+                    showAlert('Unauthorized access. Admin only.', 'error');
+                    setTimeout(() => { window.location.href = '/index.html'; }, 2000);
+                    return;
+                }
+
+                // Load all data (each with its own error handling)
+                try {
+                    const bookingsRes = await databases.listDocuments(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.bookings);
+                    allBookings = bookingsRes.documents;
+                } catch (e) { console.warn('Could not load bookings:', e); }
+
+                try {
+                    const workersRes = await databases.listDocuments(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.workers);
+                    allWorkers = workersRes.documents;
+                } catch (e) { console.warn('Could not load workers:', e); }
+
+                try {
+                    const customersRes = await databases.listDocuments(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.customers);
+                    allCustomers = customersRes.documents;
+                } catch (e) { console.warn('Could not load customers:', e); }
+
+                try {
+                    const usersRes = await databases.listDocuments(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.users);
+                    allUsers = usersRes.documents;
+                } catch (e) { console.warn('Could not load users:', e); }
+
+                renderOverviewStats();
+                renderStatusBreakdown();
+                renderRevenueTable();
+                renderTopWorkers();
+                renderWeeklyChart();
+
+            } catch (error) {
+                console.error('Initialization error:', error);
+                showAlert('Failed to load analytics.', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function renderOverviewStats() {
+            const totalUsers = allUsers.length;
+            const completedBookings = allBookings.filter(b => b.status === 'completed');
+            const totalRevenue = completedBookings.reduce((sum, b) => sum + (b.estimatedPrice || 0), 0);
+            const avgValue = completedBookings.length > 0 ? Math.round(totalRevenue / completedBookings.length) : 0;
+            const completionRate = allBookings.length > 0
+                ? Math.round((completedBookings.length / allBookings.length) * 100)
+                : 0;
+
+            document.getElementById('totalUsers').textContent = totalUsers;
+            document.getElementById('totalRevenue').textContent = `₹${totalRevenue.toLocaleString()}`;
+            document.getElementById('avgBookingValue').textContent = `₹${avgValue.toLocaleString()}`;
+            document.getElementById('completionRate').textContent = `${completionRate}%`;
+        }
+
+        function renderStatusBreakdown() {
+            const container = document.getElementById('statusBreakdown');
+            const total = allBookings.length || 1;
+
+            const statuses = [
+                { key: 'pending', label: 'Pending', class: 'status-pending' },
+                { key: 'accepted', label: 'Active', class: 'status-accepted' },
+                { key: 'completed', label: 'Completed', class: 'status-completed' },
+                { key: 'cancelled', label: 'Cancelled', class: 'status-cancelled' }
+            ];
+
+            container.innerHTML = '';
+
+            statuses.forEach(status => {
+                const count = status.key === 'accepted'
+                    ? allBookings.filter(b => ['accepted', 'in-progress'].includes(b.status)).length
+                    : allBookings.filter(b => b.status === status.key).length;
+
+                const pct = Math.round((count / total) * 100);
+
+                const card = document.createElement('div');
+                card.className = `status-card ${status.class}`;
+                card.innerHTML = `
+                    <div class="status-count">${count}</div>
+                    <div class="status-label">${status.label}</div>
+                    <div class="status-bar">
+                        <div class="status-bar-fill" style="width: ${pct}%;"></div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function renderRevenueTable() {
+            const tbody = document.getElementById('revenueTableBody');
+            const completedBookings = allBookings.filter(b => b.status === 'completed');
+            const totalRevenue = completedBookings.reduce((sum, b) => sum + (b.estimatedPrice || 0), 0) || 1;
+
+            const categoryData = serviceCategories.map(cat => {
+                const catBookings = allBookings.filter(b => b.serviceCategory === cat);
+                const catCompleted = catBookings.filter(b => b.status === 'completed');
+                const catRevenue = catCompleted.reduce((sum, b) => sum + (b.estimatedPrice || 0), 0);
+                const share = Math.round((catRevenue / totalRevenue) * 100);
+
+                return { cat, total: catBookings.length, completed: catCompleted.length, revenue: catRevenue, share };
+            }).sort((a, b) => b.revenue - a.revenue);
+
+            if (categoryData.every(c => c.total === 0)) {
+                tbody.innerHTML = `<tr class="empty-row"><td colspan="5">No booking data available yet</td></tr>`;
+                return;
+            }
+
+            const maxRevenue = Math.max(...categoryData.map(c => c.revenue)) || 1;
+
+            tbody.innerHTML = '';
+            categoryData.forEach(data => {
+                if (data.total === 0) return;
+                const barWidth = Math.round((data.revenue / maxRevenue) * 80);
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${categoryNames[data.cat] || data.cat}</strong></td>
+                    <td>${data.total}</td>
+                    <td>${data.completed}</td>
+                    <td>₹${data.revenue.toLocaleString()} <span class="revenue-bar" style="width: ${barWidth}px;"></span></td>
+                    <td>${data.share}%</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderTopWorkers() {
+            const tbody = document.getElementById('workersTableBody');
+
+            if (allWorkers.length === 0) {
+                tbody.innerHTML = `<tr class="empty-row"><td colspan="5">No worker data available yet</td></tr>`;
+                return;
+            }
+
+            // Count completed bookings per worker from actual bookings data
+            const completedJobsMap = {};
+            allBookings.filter(b => b.status === 'completed').forEach(b => {
+                completedJobsMap[b.workerId] = (completedJobsMap[b.workerId] || 0) + 1;
+            });
+
+            const sorted = [...allWorkers]
+                .filter(w => w.isApproved)
+                .map(w => ({ ...w, actualCompletedJobs: completedJobsMap[w.$id] || 0 }))
+                .sort((a, b) => b.actualCompletedJobs - a.actualCompletedJobs)
+                .slice(0, 10);
+
+            tbody.innerHTML = '';
+            sorted.forEach(worker => {
+                const user = allUsers.find(u => u.userId === worker.userId);
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${user ? user.name : 'Worker #' + worker.$id.substring(0, 8)}</strong></td>
+                    <td>${(worker.skillCategory || 'N/A').replace('-', ' ').toUpperCase()}</td>
+                    <td>${worker.actualCompletedJobs}</td>
+                    <td>${(worker.rating || 0).toFixed(1)} ⭐</td>
+                    <td><span class="badge badge-${worker.isActive ? 'success' : 'error'}">${worker.isActive ? 'Active' : 'Inactive'}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderWeeklyChart() {
+            const container = document.getElementById('weeklyChart');
+            const now = new Date();
+            const days = [];
+
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date(now);
+                date.setDate(date.getDate() - i);
+                date.setHours(0, 0, 0, 0);
+                days.push(date);
+            }
+
+            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+            const counts = days.map(day => {
+                const nextDay = new Date(day);
+                nextDay.setDate(nextDay.getDate() + 1);
+                return allBookings.filter(b => {
+                    const created = new Date(b.createdAt);
+                    return created >= day && created < nextDay;
+                }).length;
+            });
+
+            const maxCount = Math.max(...counts, 1);
+
+            container.innerHTML = '';
+            days.forEach((day, i) => {
+                const barHeight = Math.max(4, (counts[i] / maxCount) * 100);
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'day-bar';
+                dayDiv.innerHTML = `
+                    <div class="bar-count">${counts[i]}</div>
+                    <div class="bar-fill" style="height: ${barHeight}px;"></div>
+                    <div class="bar-day">${dayNames[day.getDay()]}</div>
+                `;
+                container.appendChild(dayDiv);
+            });
+        }
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+
+        init();
+    </script>
+
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+        <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <svg id="moon-icon" class="hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+    </button>
+
+    <script type="module">
+        import { toggleTheme, initTheme } from '/js/theme.js';
+        window.toggleTheme = toggleTheme;
+        initTheme();
+    </script>
+
+</body>
+
+</html>
