@@ -316,13 +316,13 @@
                     let cleanPhone = emailPhone.replace(/\D/g, '');
                     const formattedPhone = cleanPhone.startsWith('+') ? cleanPhone : `+91${cleanPhone}`;
 
-                    const session = await account.createPhoneSession(
+                    const token = await account.createPhoneToken(
                         ID.unique(),
                         formattedPhone
                     );
 
-                    userId = session.userId;
-                    sessionId = session.$id;
+                    userId = token.userId;
+                    sessionId = token.$id;
 
                     showAlert('OTP sent to your phone!', 'success');
                 }
