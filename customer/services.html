@@ -251,10 +251,88 @@
                 grid-template-columns: repeat(2, 1fr);
             }
         }
+
+        /* Portfolio Gallery - Collapsed by default, expands on hover */
+        .portfolio-section {
+            margin-top: var(--spacing-sm);
+            border-top: 1px solid var(--color-border);
+            padding-top: var(--spacing-sm);
+        }
+
+        .portfolio-label {
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .portfolio-collapsed {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            height: 36px;
+            overflow: hidden;
+        }
+
+        .portfolio-collapsed .mini-thumb {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-sm);
+            object-fit: cover;
+            border: 1px solid var(--color-border);
+            flex-shrink: 0;
+        }
+
+        .portfolio-collapsed .more-badge {
+            font-size: 0.75rem;
+            color: var(--color-accent-primary);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .portfolio-expanded {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: max-height 0.4s ease, opacity 0.3s ease, margin 0.3s ease;
+            margin-top: 0;
+        }
+
+        .worker-card:hover .portfolio-expanded {
+            max-height: 800px;
+            opacity: 1;
+            margin-top: var(--spacing-sm);
+        }
+
+        .worker-card:hover .portfolio-collapsed {
+            display: none;
+        }
+
+        .portfolio-expanded .port-thumb {
+            aspect-ratio: 1;
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            border: 1px solid var(--color-border);
+        }
+
+        .portfolio-expanded .port-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .portfolio-expanded .port-thumb:hover img {
+            transform: scale(1.1);
+        }
     </style>
 
     <script type="module">
-        import { account, databases, APPWRITE_CONFIG, showLoading, hideLoading, showAlert, logout } from '/js/appwrite.js';
+        import { account, databases, storage, APPWRITE_CONFIG, showLoading, hideLoading, showAlert, logout } from '/js/appwrite.js';
         import { Query } from 'https://cdn.jsdelivr.net/npm/appwrite@14.0.1/+esm';
 
         let currentUser = null;
@@ -462,10 +540,19 @@
           <button class="btn btn-primary btn-block" onclick="bookWorker('${worker.$id}', '${worker.skillCategory}', ${worker.charges})">
             Book Now
           </button>
+          
+          <div class="portfolio-section" id="portfolio-${worker.$id}" style="display:none;">
+            <div class="portfolio-label">📸 Work Portfolio</div>
+            <div class="portfolio-collapsed" id="portfolio-collapsed-${worker.$id}"></div>
+            <div class="portfolio-expanded" id="portfolio-expanded-${worker.$id}"></div>
+          </div>
         `;
 
                 workersGrid.appendChild(workerCard);
             });
+
+            // Load portfolios for all displayed workers
+            loadAllPortfolios();
         }
 
         // Apply filters
@@ -488,6 +575,51 @@
 
             displayWorkers();
         });
+
+        // Load portfolio images for all displayed workers
+        async function loadAllPortfolios() {
+            // Fetch all files from the work-portfolio bucket
+            let allFiles = [];
+            try {
+                const res = await storage.listFiles(APPWRITE_CONFIG.buckets.workPortfolio, [Query.limit(500)]);
+                allFiles = res.files || [];
+            } catch (e) {
+                console.warn('Could not load portfolio files:', e);
+                return;
+            }
+
+            // Group files by worker ID (filename prefix)
+            filteredWorkers.forEach(worker => {
+                const workerFiles = allFiles.filter(f => f.name.startsWith(worker.$id));
+                const section = document.getElementById(`portfolio-${worker.$id}`);
+                const collapsed = document.getElementById(`portfolio-collapsed-${worker.$id}`);
+                const expanded = document.getElementById(`portfolio-expanded-${worker.$id}`);
+
+                if (!section || !collapsed || !expanded || workerFiles.length === 0) return;
+
+                section.style.display = 'block';
+
+                // Collapsed view: show up to 3 mini thumbnails + more badge
+                const previewCount = Math.min(3, workerFiles.length);
+                let collapsedHTML = '';
+                for (let i = 0; i < previewCount; i++) {
+                    const url = storage.getFileView(APPWRITE_CONFIG.buckets.workPortfolio, workerFiles[i].$id).toString();
+                    collapsedHTML += `<img class="mini-thumb" src="${url}" alt="Work" loading="lazy">`;
+                }
+                if (workerFiles.length > 3) {
+                    collapsedHTML += `<span class="more-badge">+${workerFiles.length - 3} more</span>`;
+                }
+                collapsed.innerHTML = collapsedHTML;
+
+                // Expanded view: full 3-column grid
+                let expandedHTML = '';
+                workerFiles.forEach(file => {
+                    const url = storage.getFileView(APPWRITE_CONFIG.buckets.workPortfolio, file.$id).toString();
+                    expandedHTML += `<div class="port-thumb"><img src="${url}" alt="Work photo" loading="lazy"></div>`;
+                });
+                expanded.innerHTML = expandedHTML;
+            });
+        }
 
         // Book worker
         window.bookWorker = function (workerId, category, charges) {
