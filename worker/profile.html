@@ -541,15 +541,17 @@
                         showAlert(`${file.name} exceeds 2MB, skipped.`, 'error');
                         continue;
                     }
-                    const uploadName = `${workerData.$id}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
-                    const blob = new File([file], uploadName, { type: file.type });
-                    await storage.createFile(APPWRITE_CONFIG.buckets.workPortfolio, ID.unique(), blob);
+                    // Get extension from original file
+                    const ext = file.name.split('.').pop() || 'jpg';
+                    const uploadName = `${workerData.$id}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}.${ext}`;
+                    const renamedFile = new File([file], uploadName, { type: file.type });
+                    await storage.createFile(APPWRITE_CONFIG.buckets.workPortfolio, ID.unique(), renamedFile);
                 }
                 showAlert('Images uploaded!', 'success');
                 await loadPortfolioImages();
             } catch (err) {
-                console.error('Upload error:', err);
-                showAlert('Failed to upload some images', 'error');
+                console.error('Upload error details:', err.message, err.code, err);
+                showAlert(`Upload failed: ${err.message || 'Unknown error'}`, 'error');
             } finally {
                 hideLoading();
                 e.target.value = ''; // reset input
