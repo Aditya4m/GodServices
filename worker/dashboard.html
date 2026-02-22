@@ -279,7 +279,6 @@
     <script type="module">
         import { account, databases, storage, APPWRITE_CONFIG, showLoading, hideLoading, showAlert, logout } from '/js/appwrite.js';
         import { Query, ID } from 'https://cdn.jsdelivr.net/npm/appwrite@14.0.1/+esm';
-        import { initNotifications } from '/js/notifications.js';
 
         let currentUser = null;
         let workerData = null;
@@ -329,9 +328,6 @@
                         loadPendingJobs(),
                         loadTodaySchedule()
                     ]);
-
-                    // Initialize real-time notifications
-                    initNotifications(workerData.$id, 'worker');
                 } else {
                     showAlert('Worker profile not found. Please complete your profile.', 'error');
                     setTimeout(() => {
