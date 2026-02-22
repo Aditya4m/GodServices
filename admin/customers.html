@@ -20,7 +20,6 @@
                 <li><a href="/admin/customers.html" class="nav-link active">Customers</a></li>
                 <li><a href="/admin/bookings.html" class="nav-link">Bookings</a></li>
                 <li><a href="/admin/services.html" class="nav-link">Services</a></li>
-                <li><a href="/admin/analytics.html" class="nav-link">Analytics</a></li>
                 <li><button class="btn btn-ghost btn-sm" id="logoutBtn">Logout</button></li>
             </ul>
         </div>
@@ -53,14 +52,7 @@
             </div>
         </section>
 
-        <!-- Search & Filter -->
-        <section class="filter-section mt-xl">
-            <h2>All Customers</h2>
-            <div class="filter-bar mt-md">
-                <input type="text" id="searchInput" class="form-input"
-                    placeholder="Search by name, phone, or pincode...">
-            </div>
-        </section>
+
 
         <!-- Customer List -->
         <section class="customers-list mt-md">
@@ -355,10 +347,7 @@
             });
         }
 
-        // Search handler
-        document.getElementById('searchInput').addEventListener('input', (e) => {
-            displayCustomers(e.target.value);
-        });
+
 
         // Logout
         document.getElementById('logoutBtn').addEventListener('click', logout);
