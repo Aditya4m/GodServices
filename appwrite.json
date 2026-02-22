@@ -1,0 +1,18 @@
+{
+    "projectId": "699164be00203d3d1b34",
+    "projectName": "GodServices",
+    "databases": [
+        {
+            "$id": "699172230026429d954f",
+            "name": "GodServicesDB"
+        }
+    ],
+    "settings": {
+        "services": {
+            "hosting": {
+                "enabled": true,
+                "directory": "."
+            }
+        }
+    }
+}
