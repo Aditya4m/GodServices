@@ -484,6 +484,7 @@
         // --- Portfolio JS ---
         let portfolioFiles = []; // array of { $id, name }
         const MAX_PORTFOLIO = 18;
+        const PORTFOLIO_BUCKET = 'qr-codes';
 
         async function loadPortfolioImages() {
             if (!workerData) return;
@@ -493,14 +494,14 @@
             grid.innerHTML = '';
 
             try {
-                const res = await storage.listFiles(APPWRITE_CONFIG.buckets.workPortfolio, [
+                const res = await storage.listFiles(PORTFOLIO_BUCKET, [
                     Query.search('name', workerData.$id)
                 ]);
                 portfolioFiles = res.files || [];
             } catch (e) {
                 // Fallback: list all and filter client-side
                 try {
-                    const res = await storage.listFiles(APPWRITE_CONFIG.buckets.workPortfolio, [Query.limit(100)]);
+                    const res = await storage.listFiles(PORTFOLIO_BUCKET, [Query.limit(100)]);
                     portfolioFiles = (res.files || []).filter(f => f.name.startsWith(workerData.$id));
                 } catch (e2) {
                     console.error('Portfolio load error:', e2);
@@ -514,7 +515,7 @@
             portfolioFiles.forEach(file => {
                 const thumb = document.createElement('div');
                 thumb.className = 'portfolio-thumb';
-                const url = storage.getFileView(APPWRITE_CONFIG.buckets.workPortfolio, file.$id).toString();
+                const url = storage.getFileView(PORTFOLIO_BUCKET, file.$id).toString();
                 thumb.innerHTML = `
                     <img src="${url}" alt="Work photo" loading="lazy">
                     <button class="delete-btn" title="Delete" onclick="deletePortfolioImage('${file.$id}')">&times;</button>
@@ -545,7 +546,7 @@
                     const ext = file.name.split('.').pop() || 'jpg';
                     const uploadName = `${workerData.$id}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}.${ext}`;
                     const renamedFile = new File([file], uploadName, { type: file.type });
-                    await storage.createFile(APPWRITE_CONFIG.buckets.workPortfolio, ID.unique(), renamedFile);
+                    await storage.createFile(PORTFOLIO_BUCKET, ID.unique(), renamedFile);
                 }
                 showAlert('Images uploaded!', 'success');
                 await loadPortfolioImages();
