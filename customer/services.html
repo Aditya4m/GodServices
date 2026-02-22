@@ -35,14 +35,7 @@
 
         <!-- Filters -->
         <section class="filters-section card mt-lg">
-            <!-- Search Bar -->
-            <div class="search-bar-wrapper mb-md">
-                <span class="search-icon">🔍</span>
-                <input type="text" id="searchInput" class="form-input search-input"
-                    placeholder="Search workers by name..." autocomplete="off">
-            </div>
-
-            <div class="grid grid-3 gap-md">
+            <div class="grid grid-2 gap-md">
                 <div class="form-group">
                     <label class="form-label" for="categoryFilter">Service Category</label>
                     <select id="categoryFilter" class="form-select">
@@ -62,11 +55,9 @@
                     <label class="form-label" for="pincodeFilter">Pincode</label>
                     <input type="text" id="pincodeFilter" class="form-input" placeholder="Enter pincode">
                 </div>
-
-                <div class="form-group" style="display: flex; align-items: flex-end;">
-                    <button class="btn btn-primary btn-block" id="applyFiltersBtn">Apply Filters</button>
-                </div>
             </div>
+
+            <button class="btn btn-primary mt-md" id="applyFiltersBtn">Apply Filters</button>
         </section>
 
         <!-- Workers Grid -->
@@ -94,29 +85,6 @@
 
         .filters-section {
             padding: var(--spacing-lg);
-        }
-
-        .search-bar-wrapper {
-            position: relative;
-        }
-
-        .search-icon {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 1.1rem;
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        .search-input {
-            padding-left: 44px !important;
-            font-size: 1.05rem;
-        }
-
-        .mb-md {
-            margin-bottom: var(--spacing-md);
         }
 
         .worker-card {
@@ -500,27 +468,26 @@
             });
         }
 
-        // Apply all filters (search + category + pincode)
-        function applyAllFilters() {
-            const searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
+        // Apply filters
+        document.getElementById('applyFiltersBtn').addEventListener('click', () => {
+            console.log('Apply Filters button clicked');
             const category = document.getElementById('categoryFilter').value;
             const pincode = document.getElementById('pincodeFilter').value.trim();
 
+            console.log('Filters:', { category, pincode });
+            console.log('All workers count:', allWorkers.length);
+
+            // Filter
             filteredWorkers = (allWorkers || []).filter(worker => {
-                if (searchQuery && !(worker.name || '').toLowerCase().includes(searchQuery)) return false;
                 if (category && worker.skillCategory !== category) return false;
                 if (pincode && (!worker.serviceArea || !worker.serviceArea.includes(pincode))) return false;
                 return true;
             });
 
+            console.log('Filtered workers count:', filteredWorkers.length);
+
             displayWorkers();
-        }
-
-        // Instant search on typing
-        document.getElementById('searchInput').addEventListener('input', applyAllFilters);
-
-        // Apply filters button
-        document.getElementById('applyFiltersBtn').addEventListener('click', applyAllFilters);
+        });
 
         // Book worker
         window.bookWorker = function (workerId, category, charges) {
