@@ -20,7 +20,7 @@
                 <li><a href="/admin/customers.html" class="nav-link">Customers</a></li>
                 <li><a href="/admin/bookings.html" class="nav-link">Bookings</a></li>
                 <li><a href="/admin/services.html" class="nav-link">Services</a></li>
-                <li><a href="/admin/analytics.html" class="nav-link active">Analytics</a></li>
+
                 <li><button class="btn btn-ghost btn-sm" id="logoutBtn">Logout</button></li>
             </ul>
         </div>
@@ -62,13 +62,8 @@
         <!-- Booking Status Breakdown -->
         <section class="analytics-section mt-xl">
             <h2>Booking Status Breakdown</h2>
-            <div class="chart-row mt-md">
-                <div class="chart-card">
-                    <canvas id="statusChart"></canvas>
-                </div>
-                <div class="chart-card">
-                    <canvas id="revenueChart"></canvas>
-                </div>
+            <div class="grid grid-4 gap-md mt-md" id="statusBreakdown">
+                <!-- Loaded dynamically -->
             </div>
         </section>
 
@@ -113,15 +108,6 @@
                 </table>
             </div>
         </section>
-
-        <!-- Recent Activity Timeline -->
-        <section class="analytics-section mt-xl">
-            <h2>Recent Bookings (Last 7 Days)</h2>
-            <div class="chart-card chart-card-wide mt-md">
-                <canvas id="weeklyChart"></canvas>
-            </div>
-        </section>
-
     </main>
 
     <style>
@@ -285,32 +271,61 @@
             border-bottom: none;
         }
 
-        .revenue-bar {
-            display: inline-block;
-            height: 6px;
-            border-radius: 3px;
-            background: var(--color-accent-primary);
-            margin-left: var(--spacing-sm);
-            vertical-align: middle;
-            transition: width 1s ease;
-        }
 
-        /* Charts */
-        .chart-row {
+
+        /* Weekly chart */
+        .grid-7 {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: var(--spacing-lg);
+            grid-template-columns: repeat(7, 1fr);
         }
 
-        .chart-card {
+        .day-bar {
             background: var(--color-bg-card);
             border: 1px solid var(--color-border);
-            border-radius: var(--radius-lg);
-            padding: var(--spacing-lg);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md);
+            text-align: center;
+            min-height: 180px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            gap: var(--spacing-sm);
+            transition: all var(--transition-fast);
         }
 
-        .chart-card-wide {
-            width: 100%;
+        .day-bar:hover {
+            border-color: var(--color-accent-primary);
+            box-shadow: var(--shadow-md);
+        }
+
+        .bar-fill {
+            width: 40px;
+            background: linear-gradient(180deg, var(--color-accent-primary), var(--color-accent-hover, #d97706));
+            border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+            transition: height 1s ease;
+            min-height: 4px;
+        }
+
+        .bar-count {
+            font-family: var(--font-display);
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--color-accent-primary);
+        }
+
+        .bar-day {
+            font-size: 0.75rem;
+            color: var(--color-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .empty-row td {
+            text-align: center;
+            color: var(--color-text-muted);
+            padding: var(--spacing-xl) !important;
         }
 
         @media (max-width: 768px) {
@@ -318,8 +333,8 @@
                 display: none;
             }
 
-            .chart-row {
-                grid-template-columns: 1fr;
+            .grid-7 {
+                grid-template-columns: repeat(4, 1fr);
             }
 
             .analytics-table th:nth-child(5),
@@ -327,9 +342,14 @@
                 display: none;
             }
         }
+
+        @media (max-width: 480px) {
+            .grid-7 {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
     </style>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="module">
         import { account, databases, APPWRITE_CONFIG, showLoading, hideLoading, showAlert, logout } from '/js/appwrite.js';
         import { Query } from 'https://cdn.jsdelivr.net/npm/appwrite@14.0.1/+esm';
@@ -408,8 +428,7 @@
                 } catch (e) { console.warn('Could not load users:', e); }
 
                 renderOverviewStats();
-                renderStatusChart();
-                renderRevenueChart();
+                renderStatusBreakdown();
                 renderRevenueTable();
                 renderTopWorkers();
                 renderWeeklyChart();
@@ -437,116 +456,36 @@
             document.getElementById('completionRate').textContent = `${completionRate}%`;
         }
 
-        // Get theme-aware colors
-        function getChartColors() {
-            const style = getComputedStyle(document.documentElement);
-            return {
-                text: style.getPropertyValue('--color-text-secondary').trim() || '#b0b0b0',
-                grid: style.getPropertyValue('--color-border').trim() || '#2a2a2a',
-                accent: style.getPropertyValue('--color-accent-primary').trim() || '#ff6b00',
-                warning: '#f59e0b',
-                info: '#3b82f6',
-                success: '#10b981',
-                error: '#ef4444'
-            };
-        }
+        function renderStatusBreakdown() {
+            const container = document.getElementById('statusBreakdown');
+            const total = allBookings.length || 1;
 
-        function renderStatusChart() {
-            const ctx = document.getElementById('statusChart').getContext('2d');
-            const colors = getChartColors();
-
-            const pending = allBookings.filter(b => b.status === 'pending').length;
-            const active = allBookings.filter(b => ['accepted', 'in-progress'].includes(b.status)).length;
-            const completed = allBookings.filter(b => b.status === 'completed').length;
-            const cancelled = allBookings.filter(b => b.status === 'cancelled').length;
-
-            new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Pending', 'Active', 'Completed', 'Cancelled'],
-                    datasets: [{
-                        data: [pending, active, completed, cancelled],
-                        backgroundColor: [colors.warning, colors.info, colors.success, colors.error],
-                        borderWidth: 0,
-                        hoverOffset: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                color: colors.text,
-                                padding: 16,
-                                font: { size: 12, family: 'Rajdhani' }
-                            }
-                        },
-                        title: {
-                            display: true,
-                            text: 'Status Distribution',
-                            color: colors.accent,
-                            font: { size: 14, family: 'Orbitron', weight: 700 }
-                        }
-                    },
-                    cutout: '60%'
-                }
-            });
-        }
-
-        function renderRevenueChart() {
-            const ctx = document.getElementById('revenueChart').getContext('2d');
-            const colors = getChartColors();
-
-            const completedBookings = allBookings.filter(b => b.status === 'completed');
-            const categoryData = serviceCategories.map(cat => {
-                const catCompleted = completedBookings.filter(b => b.serviceCategory === cat);
-                const catRevenue = catCompleted.reduce((sum, b) => sum + (b.estimatedPrice || 0), 0);
-                return { cat, revenue: catRevenue };
-            }).filter(d => d.revenue > 0).sort((a, b) => b.revenue - a.revenue);
-
-            const labels = categoryData.map(d => (categoryNames[d.cat] || d.cat).replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '').trim());
-            const data = categoryData.map(d => d.revenue);
-            const barColors = [
-                '#ff6b00', '#ff8533', '#f59e0b', '#10b981',
-                '#3b82f6', '#8b5cf6', '#ec4899', '#06b6d4'
+            const statuses = [
+                { key: 'pending', label: 'Pending', class: 'status-pending' },
+                { key: 'accepted', label: 'Active', class: 'status-accepted' },
+                { key: 'completed', label: 'Completed', class: 'status-completed' },
+                { key: 'cancelled', label: 'Cancelled', class: 'status-cancelled' }
             ];
 
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels,
-                    datasets: [{
-                        label: 'Revenue (₹)',
-                        data,
-                        backgroundColor: barColors.slice(0, data.length),
-                        borderRadius: 6,
-                        borderSkipped: false
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    plugins: {
-                        legend: { display: false },
-                        title: {
-                            display: true,
-                            text: 'Revenue by Category',
-                            color: colors.accent,
-                            font: { size: 14, family: 'Orbitron', weight: 700 }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            ticks: { color: colors.text, font: { family: 'Rajdhani' }, callback: v => '₹' + v.toLocaleString() },
-                            grid: { color: colors.grid }
-                        },
-                        y: {
-                            ticks: { color: colors.text, font: { family: 'Rajdhani', weight: 600 } },
-                            grid: { display: false }
-                        }
-                    }
-                }
+            container.innerHTML = '';
+
+            statuses.forEach(status => {
+                const count = status.key === 'accepted'
+                    ? allBookings.filter(b => ['accepted', 'in-progress'].includes(b.status)).length
+                    : allBookings.filter(b => b.status === status.key).length;
+
+                const pct = Math.round((count / total) * 100);
+
+                const card = document.createElement('div');
+                card.className = `status-card ${status.class}`;
+                card.innerHTML = `
+                    <div class="status-count">${count}</div>
+                    <div class="status-label">${status.label}</div>
+                    <div class="status-bar">
+                        <div class="status-bar-fill" style="width: ${pct}%;"></div>
+                    </div>
+                `;
+                container.appendChild(card);
             });
         }
 
@@ -580,7 +519,7 @@
                     <td><strong>${categoryNames[data.cat] || data.cat}</strong></td>
                     <td>${data.total}</td>
                     <td>${data.completed}</td>
-                    <td>₹${data.revenue.toLocaleString()} <span class="revenue-bar" style="width: ${barWidth}px;"></span></td>
+                    <td>₹${data.revenue.toLocaleString()}</td>
                     <td>${data.share}%</td>
                 `;
                 tbody.appendChild(tr);
@@ -623,62 +562,7 @@
         }
 
         function renderWeeklyChart() {
-            const ctx = document.getElementById('weeklyChart').getContext('2d');
-            const colors = getChartColors();
-            const now = new Date();
-            const days = [];
-
-            for (let i = 6; i >= 0; i--) {
-                const date = new Date(now);
-                date.setDate(date.getDate() - i);
-                date.setHours(0, 0, 0, 0);
-                days.push(date);
-            }
-
-            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-            const counts = days.map(day => {
-                const nextDay = new Date(day);
-                nextDay.setDate(nextDay.getDate() + 1);
-                return allBookings.filter(b => {
-                    const created = new Date(b.createdAt);
-                    return created >= day && created < nextDay;
-                }).length;
-            });
-
-            const labels = days.map(d => dayNames[d.getDay()]);
-
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels,
-                    datasets: [{
-                        label: 'Bookings',
-                        data: counts,
-                        backgroundColor: colors.accent + 'cc',
-                        hoverBackgroundColor: colors.accent,
-                        borderRadius: 8,
-                        borderSkipped: false
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        x: {
-                            ticks: { color: colors.text, font: { family: 'Rajdhani', weight: 600 } },
-                            grid: { display: false }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            ticks: { color: colors.text, font: { family: 'Rajdhani' }, stepSize: 1 },
-                            grid: { color: colors.grid }
-                        }
-                    }
-                }
-            });
+            // Chart removed
         }
 
         // Logout
