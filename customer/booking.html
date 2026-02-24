@@ -127,41 +127,41 @@
                     </div>
                 </div>
 
-                
 
-                    <!-- QR Code -->
-                    <div class="qr-code-container" id="qrCodeContainer">
-                        <div id="qrCode"></div>
-                        <p class="text-secondary mt-sm">Scan with any UPI app</p>
-                    </div>
 
-                    <!-- UPI Apps (Mobile Only) -->
-                    <div class="upi-apps" id="upiApps">
-                        <p class="text-secondary mb-sm">Or pay with:</p>
-                        <div class="flex gap-sm" style="justify-content: center; flex-wrap: wrap;">
-                            <button class="btn btn-secondary btn-sm" onclick="openUPIApp('gpay')">Google Pay</button>
-                            <button class="btn btn-secondary btn-sm" onclick="openUPIApp('phonepe')">PhonePe</button>
-                            <button class="btn btn-secondary btn-sm" onclick="openUPIApp('paytm')">Paytm</button>
-                        </div>
-                    </div>
+                <!-- QR Code -->
+                <div class="qr-code-container" id="qrCodeContainer">
+                    <div id="qrCode"></div>
+                    <p class="text-secondary mt-sm">Scan with any UPI app</p>
+                </div>
 
-                    <!-- UTR Input -->
-                    <div class="utr-section mt-lg">
-                        <div class="form-group">
-                            <label class="form-label" for="utrNumber">Transaction ID (UTR)</label>
-                            <input type="text" id="utrNumber" class="form-input" placeholder="Enter 12-digit UTR"
-                                maxlength="12" pattern="[0-9]{12}">
-                            <p class="form-hint">Enter the 12-digit transaction ID from your payment app</p>
-                        </div>
-
-                        <button class="btn btn-ghost btn-block" onclick="submitPayment()">
-                            I have Paid via UPI
-                        </button>
+                <!-- UPI Apps (Mobile Only) -->
+                <div class="upi-apps" id="upiApps">
+                    <p class="text-secondary mb-sm">Or pay with:</p>
+                    <div class="flex gap-sm" style="justify-content: center; flex-wrap: wrap;">
+                        <button class="btn btn-secondary btn-sm" onclick="openUPIApp('gpay')">Google Pay</button>
+                        <button class="btn btn-secondary btn-sm" onclick="openUPIApp('phonepe')">PhonePe</button>
+                        <button class="btn btn-secondary btn-sm" onclick="openUPIApp('paytm')">Paytm</button>
                     </div>
                 </div>
 
+                <!-- UTR Input -->
+                <div class="utr-section mt-lg">
+                    <div class="form-group">
+                        <label class="form-label" for="utrNumber">Transaction ID (UTR)</label>
+                        <input type="text" id="utrNumber" class="form-input" placeholder="Enter 12-digit UTR"
+                            maxlength="12" pattern="[0-9]{12}">
+                        <p class="form-hint">Enter the 12-digit transaction ID from your payment app</p>
+                    </div>
+
+                    <button class="btn btn-ghost btn-block" onclick="submitPayment()">
+                        I have Paid via UPI
+                    </button>
+                </div>
             </div>
+
         </div>
+    </div>
     </div>
 
     <style>
@@ -318,8 +318,9 @@
 
                 // Fetch worker's payment info
                 try {
-                    // Try by userId first (most common case)
                     let workerDocs = [];
+
+                    // Try by userId first
                     try {
                         const res = await databases.listDocuments(
                             APPWRITE_CONFIG.databaseId,
@@ -328,13 +329,23 @@
                         );
                         workerDocs = res.documents;
                     } catch (e) {
-                        // Fallback: fetch all and find by $id
-                        const res = await databases.listDocuments(
-                            APPWRITE_CONFIG.databaseId,
-                            APPWRITE_CONFIG.collections.workers
-                        );
-                        workerDocs = res.documents.filter(w => w.$id === workerId || w.userId === workerId);
+                        console.warn('userId query failed, will try fallback:', e);
                     }
+
+                    // If not found by userId, try fetching by document $id or broader search
+                    if (workerDocs.length === 0) {
+                        try {
+                            const doc = await databases.getDocument(
+                                APPWRITE_CONFIG.databaseId,
+                                APPWRITE_CONFIG.collections.workers,
+                                workerId
+                            );
+                            workerDocs = [doc];
+                        } catch (e2) {
+                            console.warn('Direct document fetch failed:', e2);
+                        }
+                    }
+
                     if (workerDocs.length > 0) {
                         workerPayment.upiId = workerDocs[0].upiId || null;
                         workerPayment.qrCodeFileId = workerDocs[0].qrCodeFileId || null;
