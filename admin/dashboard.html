@@ -20,7 +20,6 @@
                 <li><a href="/admin/customers.html" class="nav-link">Customers</a></li>
                 <li><a href="/admin/bookings.html" class="nav-link">Bookings</a></li>
                 <li><a href="/admin/services.html" class="nav-link">Services</a></li>
-                <li><a href="/admin/analytics.html" class="nav-link">Analytics</a></li>
                 <li><button class="btn btn-ghost btn-sm" id="logoutBtn">Logout</button></li>
             </ul>
         </div>
@@ -48,10 +47,6 @@
             <div class="stat-card">
                 <div class="stat-value" id="totalBookings">0</div>
                 <div class="stat-label">Total Bookings</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="platformRevenue">₹0</div>
-                <div class="stat-label">Platform Revenue</div>
             </div>
         </section>
 
@@ -94,49 +89,7 @@
             </div>
         </section>
 
-        <!-- Platform Health -->
-        <section class="health-section mt-xl">
-            <h2>Platform Health</h2>
-            <div class="grid grid-2 gap-md mt-md">
 
-                <div class="health-card card">
-                    <h4>Worker Status</h4>
-                    <div class="health-stats">
-                        <div class="health-stat">
-                            <span class="health-label">Active Workers:</span>
-                            <span class="health-value text-success" id="activeWorkers">0</span>
-                        </div>
-                        <div class="health-stat">
-                            <span class="health-label">Busy Workers:</span>
-                            <span class="health-value text-warning" id="busyWorkers">0</span>
-                        </div>
-                        <div class="health-stat">
-                            <span class="health-label">Approval Rate:</span>
-                            <span class="health-value text-primary" id="approvalRate">0%</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="health-card card">
-                    <h4>Booking Status</h4>
-                    <div class="health-stats">
-                        <div class="health-stat">
-                            <span class="health-label">Pending:</span>
-                            <span class="health-value text-warning" id="pendingBookings">0</span>
-                        </div>
-                        <div class="health-stat">
-                            <span class="health-label">Completed Today:</span>
-                            <span class="health-value text-success" id="completedToday">0</span>
-                        </div>
-                        <div class="health-stat">
-                            <span class="health-label">Success Rate:</span>
-                            <span class="health-value text-primary" id="successRate">0%</span>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </section>
 
     </main>
 
@@ -275,12 +228,10 @@
                     return;
                 }
 
-                // Load all dashboard data
                 await Promise.all([
                     loadPlatformStats(),
                     loadQuickActions(),
-                    loadRecentActivity(),
-                    loadPlatformHealth()
+                    loadRecentActivity()
                 ]);
 
             } catch (error) {
@@ -294,21 +245,17 @@
         // Load platform statistics
         async function loadPlatformStats() {
             try {
-                const [workersRes, customersRes, bookingsRes] = await Promise.all([
+                const [workersRes, usersRes, bookingsRes] = await Promise.all([
                     databases.listDocuments(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.workers),
-                    databases.listDocuments(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.users, [Query.equal('role', 'customer')]),
+                    databases.listDocuments(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.users),
                     databases.listDocuments(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.bookings)
                 ]);
 
+                const customerCount = usersRes.documents.filter(u => u.role === 'customer').length;
+
                 document.getElementById('totalWorkers').textContent = workersRes.total;
-                document.getElementById('totalCustomers').textContent = customersRes.total;
+                document.getElementById('totalCustomers').textContent = customerCount;
                 document.getElementById('totalBookings').textContent = bookingsRes.total;
-
-                const revenue = bookingsRes.documents
-                    .filter(b => b.status === 'completed')
-                    .reduce((sum, b) => sum + (b.estimatedPrice || 0), 0);
-
-                document.getElementById('platformRevenue').textContent = `₹${revenue.toLocaleString()}`;
 
             } catch (error) {
                 console.error('Error loading platform stats:', error);
@@ -391,46 +338,7 @@
             }
         }
 
-        // Load platform health
-        async function loadPlatformHealth() {
-            try {
-                const [workersRes, bookingsRes] = await Promise.all([
-                    databases.listDocuments(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.workers),
-                    databases.listDocuments(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.bookings)
-                ]);
 
-                const workers = workersRes.documents;
-                const bookings = bookingsRes.documents;
-
-                // Worker stats
-                const activeWorkers = workers.filter(w => w.isApproved && w.isActive).length;
-                const busyWorkers = workers.filter(w => w.isApproved && !w.isActive).length;
-                const approvalRate = workers.length > 0 ? ((workers.filter(w => w.isApproved).length / workers.length) * 100).toFixed(1) : 0;
-
-                document.getElementById('activeWorkers').textContent = activeWorkers;
-                document.getElementById('busyWorkers').textContent = busyWorkers;
-                document.getElementById('approvalRate').textContent = `${approvalRate}%`;
-
-                // Booking stats
-                const pendingBookings = bookings.filter(b => b.status === 'pending').length;
-
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const completedToday = bookings.filter(b => {
-                    const updatedDate = new Date(b.updatedAt);
-                    return b.status === 'completed' && updatedDate >= today;
-                }).length;
-
-                const successRate = bookings.length > 0 ? ((bookings.filter(b => b.status === 'completed').length / bookings.length) * 100).toFixed(1) : 0;
-
-                document.getElementById('pendingBookings').textContent = pendingBookings;
-                document.getElementById('completedToday').textContent = completedToday;
-                document.getElementById('successRate').textContent = `${successRate}%`;
-
-            } catch (error) {
-                console.error('Error loading platform health:', error);
-            }
-        }
 
         // Logout handler
         document.getElementById('logoutBtn').addEventListener('click', logout);
