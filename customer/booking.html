@@ -318,9 +318,8 @@
 
                 // Fetch worker's payment info
                 try {
+                    // Try by userId first (most common case)
                     let workerDocs = [];
-
-                    // Try by userId first
                     try {
                         const res = await databases.listDocuments(
                             APPWRITE_CONFIG.databaseId,
@@ -329,23 +328,13 @@
                         );
                         workerDocs = res.documents;
                     } catch (e) {
-                        console.warn('userId query failed, will try fallback:', e);
+                        // Fallback: fetch all and find by $id
+                        const res = await databases.listDocuments(
+                            APPWRITE_CONFIG.databaseId,
+                            APPWRITE_CONFIG.collections.workers
+                        );
+                        workerDocs = res.documents.filter(w => w.$id === workerId || w.userId === workerId);
                     }
-
-                    // If not found by userId, try fetching by document $id or broader search
-                    if (workerDocs.length === 0) {
-                        try {
-                            const doc = await databases.getDocument(
-                                APPWRITE_CONFIG.databaseId,
-                                APPWRITE_CONFIG.collections.workers,
-                                workerId
-                            );
-                            workerDocs = [doc];
-                        } catch (e2) {
-                            console.warn('Direct document fetch failed:', e2);
-                        }
-                    }
-
                     if (workerDocs.length > 0) {
                         workerPayment.upiId = workerDocs[0].upiId || null;
                         workerPayment.qrCodeFileId = workerDocs[0].qrCodeFileId || null;
