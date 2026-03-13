@@ -1,14 +1,11 @@
-# Dependencies
-node_modules/
-
-# OS files
+node_modules
+dist
 .DS_Store
-Thumbs.db
-
-# IDE
-.vscode/
-.idea/
-
-# Environment
 .env
-.env.local
+*.local
+.gemini
+.agents
+.agent
+_agents
+_agent
+brain

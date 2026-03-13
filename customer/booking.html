@@ -127,57 +127,39 @@
                     </div>
                 </div>
 
-                <!-- Razorpay Payment -->
-                <div class="payment-section">
-                    <button class="btn btn-primary btn-block btn-lg razorpay-btn" onclick="payWithRazorpay()">
-                        💳 Pay with Razorpay
+
+
+                <!-- QR Code -->
+                <div class="qr-code-container" id="qrCodeContainer">
+                    <div id="qrCode"></div>
+                    <p class="text-secondary mt-sm">Scan with any UPI app</p>
+                </div>
+
+                <!-- UPI Apps (Mobile Only) -->
+                <div class="upi-apps" id="upiApps">
+                    <p class="text-secondary mb-sm">Or pay with:</p>
+                    <div class="flex gap-sm" style="justify-content: center; flex-wrap: wrap;">
+                        <button class="btn btn-secondary btn-sm" onclick="openUPIApp('gpay')">Google Pay</button>
+                        <button class="btn btn-secondary btn-sm" onclick="openUPIApp('phonepe')">PhonePe</button>
+                        <button class="btn btn-secondary btn-sm" onclick="openUPIApp('paytm')">Paytm</button>
+                    </div>
+                </div>
+
+                <!-- UTR Input -->
+                <div class="utr-section mt-lg">
+                    <div class="form-group">
+                        <label class="form-label" for="utrNumber">Transaction ID (UTR)</label>
+                        <input type="text" id="utrNumber" class="form-input" placeholder="Enter 12-digit UTR"
+                            maxlength="12" pattern="[0-9]{12}">
+                        <p class="form-hint">Enter the 12-digit transaction ID from your payment app</p>
+                    </div>
+
+                    <button class="btn btn-ghost btn-block" onclick="submitPayment()">
+                        I have Paid via UPI
                     </button>
-                    <p class="text-secondary"
-                        style="text-align: center; margin-top: var(--spacing-sm); font-size: 0.85rem;">Cards, UPI,
-                        Netbanking, Wallets & more</p>
                 </div>
-
-                <!-- UPI Fallback Divider -->
-                <div class="payment-divider">
-                    <span>OR</span>
-                </div>
-
-                <!-- UPI Payment (Fallback) -->
-                <div class="payment-section">
-                    <h4>Pay via UPI directly</h4>
-
-                    <!-- QR Code -->
-                    <div class="qr-code-container" id="qrCodeContainer">
-                        <div id="qrCode"></div>
-                        <p class="text-secondary mt-sm">Scan with any UPI app</p>
-                    </div>
-
-                    <!-- UPI Apps (Mobile Only) -->
-                    <div class="upi-apps" id="upiApps">
-                        <p class="text-secondary mb-sm">Or pay with:</p>
-                        <div class="flex gap-sm" style="justify-content: center; flex-wrap: wrap;">
-                            <button class="btn btn-secondary btn-sm" onclick="openUPIApp('gpay')">Google Pay</button>
-                            <button class="btn btn-secondary btn-sm" onclick="openUPIApp('phonepe')">PhonePe</button>
-                            <button class="btn btn-secondary btn-sm" onclick="openUPIApp('paytm')">Paytm</button>
-                        </div>
-                    </div>
-
-                    <!-- UTR Input -->
-                    <div class="utr-section mt-lg">
-                        <div class="form-group">
-                            <label class="form-label" for="utrNumber">Transaction ID (UTR)</label>
-                            <input type="text" id="utrNumber" class="form-input" placeholder="Enter 12-digit UTR"
-                                maxlength="12" pattern="[0-9]{12}">
-                            <p class="form-hint">Enter the 12-digit transaction ID from your payment app</p>
-                        </div>
-
-                        <button class="btn btn-ghost btn-block" onclick="submitPayment()">
-                            I have Paid via UPI
-                        </button>
-                    </div>
-                </div>
-
             </div>
+
         </div>
     </div>
 
@@ -262,10 +244,7 @@
             padding-top: var(--spacing-lg);
         }
 
-        .razorpay-btn {
-            font-size: 1.1rem;
-            padding: var(--spacing-md) var(--spacing-lg);
-        }
+
 
         .payment-divider {
             display: flex;
@@ -298,10 +277,10 @@
     </style>
 
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
     <script type="module">
         import { account, databases, storage, APPWRITE_CONFIG, showLoading, hideLoading, showAlert, logout } from '/js/appwrite.js';
-        import { ID, Query } from 'https://cdn.jsdelivr.net/npm/appwrite@14.0.1/+esm';
+        import { ID, Query } from 'appwrite';
 
         let currentUser = null;
         let bookingData = {};
@@ -335,26 +314,28 @@
 
                 // Fetch worker's payment info
                 try {
-                    // Try by userId first (most common case)
-                    let workerDocs = [];
+                    let workerDoc = null;
+                    // selectedWorker is the worker document $id, so fetch directly
                     try {
+                        workerDoc = await databases.getDocument(
+                            APPWRITE_CONFIG.databaseId,
+                            APPWRITE_CONFIG.collections.workers,
+                            workerId
+                        );
+                    } catch (e) {
+                        // Fallback: try querying by userId
                         const res = await databases.listDocuments(
                             APPWRITE_CONFIG.databaseId,
                             APPWRITE_CONFIG.collections.workers,
                             [Query.equal('userId', workerId)]
                         );
-                        workerDocs = res.documents;
-                    } catch (e) {
-                        // Fallback: fetch all and find by $id
-                        const res = await databases.listDocuments(
-                            APPWRITE_CONFIG.databaseId,
-                            APPWRITE_CONFIG.collections.workers
-                        );
-                        workerDocs = res.documents.filter(w => w.$id === workerId || w.userId === workerId);
+                        if (res.documents.length > 0) {
+                            workerDoc = res.documents[0];
+                        }
                     }
-                    if (workerDocs.length > 0) {
-                        workerPayment.upiId = workerDocs[0].upiId || null;
-                        workerPayment.qrCodeFileId = workerDocs[0].qrCodeFileId || null;
+                    if (workerDoc) {
+                        workerPayment.upiId = workerDoc.upiId || null;
+                        workerPayment.qrCodeFileId = workerDoc.qrCodeFileId || null;
                     }
                 } catch (err) {
                     console.warn('Could not fetch worker payment info:', err);
@@ -391,10 +372,10 @@
 
             if (workerPayment.qrCodeFileId) {
                 // Priority 1: Show uploaded QR image
-                const imgUrl = storage.getFilePreview(
+                const imgUrl = storage.getFileView(
                     APPWRITE_CONFIG.buckets.qrCodes,
                     workerPayment.qrCodeFileId
-                );
+                ).toString();
 
                 // create image element with fallback
                 const img = document.createElement('img');
@@ -460,47 +441,7 @@
             window.location.href = appSchemes[app] || `upi://pay?pa=${upiId}&pn=GOD Services&am=${bookingData.estimatedPrice}&cu=INR`;
         };
 
-        // Pay with Razorpay
-        window.payWithRazorpay = function () {
-            const options = {
-                key: APPWRITE_CONFIG.razorpayKeyId,
-                amount: bookingData.estimatedPrice * 100, // Razorpay expects paise
-                currency: 'INR',
-                name: 'GOD Services',
-                description: `${bookingData.serviceCategory.replace('-', ' ').toUpperCase()} Service`,
-                handler: async function (response) {
-                    // Payment successful — create booking
-                    await createBooking({
-                        paymentStatus: 'paid',
-                        paymentMethod: 'razorpay',
-                        razorpayPaymentId: response.razorpay_payment_id
-                    });
-                },
-                prefill: {
-                    name: bookingData.customerName,
-                    contact: bookingData.customerPhone
-                },
-                theme: {
-                    color: '#f59e0b'
-                },
-                modal: {
-                    ondismiss: function () {
-                        console.log('Razorpay modal closed');
-                    }
-                }
-            };
 
-            try {
-                const rzp = new Razorpay(options);
-                rzp.on('payment.failed', function (response) {
-                    showAlert('Payment failed: ' + response.error.description, 'error');
-                });
-                rzp.open();
-            } catch (error) {
-                console.error('Razorpay error:', error);
-                showAlert('Could not open payment gateway. Please try UPI below.', 'error');
-            }
-        };
 
         // Submit UPI payment (fallback)
         window.submitPayment = async function () {
@@ -570,6 +511,32 @@
 
         // Initialize on page load
         init();
+    </script>
+
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+        <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <svg id="moon-icon" class="hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+    </button>
+
+    <script type="module">
+        import { toggleTheme, initTheme } from '/js/theme.js';
+        window.toggleTheme = toggleTheme;
+        initTheme();
     </script>
 
 </body>

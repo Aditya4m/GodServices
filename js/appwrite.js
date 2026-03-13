@@ -2,7 +2,7 @@
 // APPWRITE SDK INITIALIZATION
 // ============================================
 
-import { Client, Account, Databases, Storage, Functions, Query } from 'https://cdn.jsdelivr.net/npm/appwrite@14.0.1/+esm';
+import { Client, Account, Databases, Storage, Functions, Query } from 'appwrite';
 
 // ============================================
 // CONFIGURATION
@@ -22,9 +22,9 @@ const APPWRITE_CONFIG = {
   },
   buckets: {
     idProofs: 'id-proofs',
-    qrCodes: 'qr-codes'
-  },
-  razorpayKeyId: 'rzp_test_REPLACE_WITH_YOUR_KEY' // Replace with your Razorpay Key ID
+    qrCodes: 'qr-codes',
+    workPortfolio: 'work-portfolio'
+  }
 };
 
 // ============================================
@@ -42,6 +42,13 @@ const account = new Account(client);
 const databases = new Databases(client);
 const storage = new Storage(client);
 const functions = new Functions(client);
+
+// ============================================
+// PING APPWRITE BACKEND TO VERIFY SETUP
+// ============================================
+client.ping()
+  .then(() => console.log('✅ Appwrite connection verified successfully!'))
+  .catch((error) => console.error('❌ Appwrite connection failed:', error));
 
 // ============================================
 // EXPORT CONFIGURATION AND SERVICES

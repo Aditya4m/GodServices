@@ -1,0 +1,18 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/admin"
+  to = "/admin/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/customer"
+  to = "/customer/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/worker"
+  to = "/worker/dashboard.html"
+  status = 200
