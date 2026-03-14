@@ -44,13 +44,6 @@ const storage = new Storage(client);
 const functions = new Functions(client);
 
 // ============================================
-// PING APPWRITE BACKEND TO VERIFY SETUP
-// ============================================
-client.ping()
-  .then(() => console.log('✅ Appwrite connection verified successfully!'))
-  .catch((error) => console.error('❌ Appwrite connection failed:', error));
-
-// ============================================
 // EXPORT CONFIGURATION AND SERVICES
 // ============================================
 export {
