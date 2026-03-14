@@ -7,9 +7,8 @@
   <meta name="description"
     content="GOD Services - GetOnDial Services. Connect with verified local service workers instantly.">
   <title>GOD Services - GetOnDial Services</title>
-  <script type="module" crossorigin src="/assets/main-04lHd-2v.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/theme-Y_Z3Ykzz.js">
-  <link rel="stylesheet" crossorigin href="/assets/theme-B1OcZys5.css">
+  <script type="module" crossorigin src="/assets/index-CVMsQ31N.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-B1OcZys5.css">
 </head>
 
 <body>
@@ -157,6 +156,7 @@
       height: 100%;
       background: radial-gradient(circle, rgba(255, 107, 0, 0.1) 0%, transparent 70%);
       animation: pulse 4s ease-in-out infinite;
+      pointer-events: none;
     }
 
     .hero-content {
@@ -366,7 +366,15 @@
       }
     }
   </style>
-
+
+  <script>
+    // Role selection handler — must be a regular script (not module)
+    // so it's available immediately for onclick handlers
+    function selectRole(role) {
+      sessionStorage.setItem('selectedRole', role);
+      window.location.href = '/login.html';
+    }
+  </script>
 
   <!-- Theme Toggle -->
   <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
