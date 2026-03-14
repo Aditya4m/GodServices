@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - GOD Services</title>
+  <script type="module" crossorigin src="/assets/adminDashboard-Dgoja30D.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/theme-Y_Z3Ykzz.js">
+  <link rel="stylesheet" crossorigin href="/assets/theme-B1OcZys5.css">
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container flex-between">
+            <div class="navbar-brand">GOD SERVICES - ADMIN</div>
+            <ul class="navbar-nav">
+                <li><a href="/admin/dashboard.html" class="nav-link active">Dashboard</a></li>
+                <li><a href="/admin/workers.html" class="nav-link">Workers</a></li>
+                <li><a href="/admin/customers.html" class="nav-link">Customers</a></li>
+                <li><a href="/admin/bookings.html" class="nav-link">Bookings</a></li>
+                <li><a href="/admin/services.html" class="nav-link">Services</a></li>
+                <li><a href="/admin/analytics.html" class="nav-link">Analytics</a></li>
+                <li><button class="btn btn-ghost btn-sm" id="logoutBtn">Logout</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container" style="padding: var(--spacing-xl) var(--spacing-md);">
+
+        <!-- Welcome Section -->
+        <section class="welcome-section">
+            <h1>Admin Control Panel</h1>
+            <p class="text-secondary">Platform Overview & Management</p>
+        </section>
+
+        <!-- Platform Stats -->
+        <section class="stats-section grid grid-4 gap-md mt-lg">
+            <div class="stat-card">
+                <div class="stat-value" id="totalWorkers">0</div>
+                <div class="stat-label">Total Workers</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalCustomers">0</div>
+                <div class="stat-label">Total Customers</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalBookings">0</div>
+                <div class="stat-label">Total Bookings</div>
+            </div>
+        </section>
+
+        <!-- Quick Actions -->
+        <section class="quick-actions mt-xl">
+            <h2>Quick Actions</h2>
+            <div class="grid grid-3 gap-md mt-md">
+
+                <div class="action-card card">
+                    <div class="action-icon">👷</div>
+                    <h4>Pending Approvals</h4>
+                    <p class="text-secondary mb-md"><span id="pendingApprovals">0</span> workers awaiting approval</p>
+                    <a href="/admin/workers.html" class="btn btn-primary btn-block">Review Workers</a>
+                </div>
+
+                <div class="action-card card">
+                    <div class="action-icon">📋</div>
+                    <h4>Active Bookings</h4>
+                    <p class="text-secondary mb-md"><span id="activeBookings">0</span> bookings in progress</p>
+                    <a href="/admin/bookings.html" class="btn btn-primary btn-block">Manage Bookings</a>
+                </div>
+
+                <div class="action-card card">
+                    <div class="action-icon">⚙️</div>
+                    <h4>Service Categories</h4>
+                    <p class="text-secondary mb-md">Manage service offerings</p>
+                    <a href="/admin/services.html" class="btn btn-primary btn-block">Manage Services</a>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Recent Activity -->
+        <section class="activity-section mt-xl">
+            <h2>Recent Activity</h2>
+            <div class="card mt-md" style="padding: var(--spacing-lg);">
+                <div id="activityFeed">
+                    <!-- Activity will be loaded dynamically -->
+                </div>
+            </div>
+        </section>
+
+
+
+    </main>
+
+    <style>
+        .welcome-section h1 {
+            font-size: 2.5rem;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .quick-actions,
+        .activity-section,
+        .health-section {
+            margin-top: var(--spacing-xxl);
+        }
+
+        .quick-actions h2,
+        .activity-section h2,
+        .health-section h2 {
+            margin-bottom: var(--spacing-lg);
+            padding-bottom: var(--spacing-sm);
+            border-bottom: 2px solid var(--color-border);
+        }
+
+        .action-card {
+            text-align: center;
+            padding: var(--spacing-xl);
+        }
+
+        .action-icon {
+            font-size: 3.5rem;
+            margin-bottom: var(--spacing-md);
+            filter: grayscale(1);
+            transition: filter var(--transition-normal);
+        }
+
+        .action-card:hover .action-icon {
+            filter: grayscale(0);
+        }
+
+        .action-card h4 {
+            font-size: 1.25rem;
+            margin-bottom: var(--spacing-sm);
+            color: var(--color-text-primary);
+        }
+
+        .activity-item {
+            padding: var(--spacing-sm) 0;
+            border-bottom: 1px solid var(--color-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-text {
+            color: var(--color-text-primary);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .activity-time {
+            color: var(--color-text-muted);
+            font-size: 0.85rem;
+        }
+
+        .health-card {
+            padding: var(--spacing-lg);
+        }
+
+        .health-card h4 {
+            font-size: 1.25rem;
+            margin-bottom: var(--spacing-md);
+            color: var(--color-accent-primary);
+        }
+
+        .health-stats {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+
+        .health-stat {
+            display: flex;
+            justify-content: space-between;
+            padding: var(--spacing-xs) 0;
+        }
+
+        .health-label {
+            color: var(--color-text-secondary);
+        }
+
+        .health-value {
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 768px) {
+            .navbar-nav {
+                display: none;
+            }
+        }
+    </style>
+
+
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+        <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <svg id="moon-icon" class="hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+    </button>
+
+
+</body>
+
+</html>

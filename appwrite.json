@@ -7,17 +7,6 @@
             "name": "GodServicesDB"
         }
     ],
-    "functions": [
-        {
-            "$id": "send-notification",
-            "name": "Send Notification",
-            "runtime": "node-21.0",
-            "execute": ["any"],
-            "entrypoint": "src/main.js",
-            "path": "functions/send-notification",
-            "commands": "npm install"
-        }
-    ],
     "settings": {
         "services": {
             "hosting": {
@@ -26,4 +15,4 @@
             }
         }
     }
-}
+}

@@ -1,11 +1,13 @@
 {
   "name": "godservices",
   "version": "1.0.0",
-  "description": "GOD Services - GetOnDial Services Platform",
+  "description": "",
+  "main": "index.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",

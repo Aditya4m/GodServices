@@ -115,6 +115,7 @@
             height: 200%;
             background: radial-gradient(circle, rgba(255, 107, 0, 0.05) 0%, transparent 70%);
             animation: pulse 6s ease-in-out infinite;
+            pointer-events: none;
         }
 
         .auth-container {
@@ -228,6 +229,12 @@
             margin-bottom: var(--spacing-md);
         }
 
+        .role-description {
+            color: var(--color-text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: var(--spacing-md);
+        }
+
         .admin-access-section {
             flex: 1;
             min-width: 300px;
@@ -256,7 +263,7 @@
 
     <script type="module">
         import { account, showLoading, hideLoading, showAlert, getUserRole, redirectToDashboard } from '/js/appwrite.js';
-        import { ID } from 'appwrite';
+        import { ID } from 'https://cdn.jsdelivr.net/npm/appwrite@14.0.1/+esm';
 
         let sessionId = null;
         let userId = null;
@@ -307,7 +314,7 @@
                     showAlert('OTP sent to your email! Check your inbox.', 'success');
                 } else {
                     // Phone login
-                    let cleanPhone = emailPhone.replace(/[^0-9+]/g, '');
+                    let cleanPhone = emailPhone.replace(/\D/g, '');
                     const formattedPhone = cleanPhone.startsWith('+') ? cleanPhone : `+91${cleanPhone}`;
 
                     const token = await account.createPhoneToken(
@@ -390,11 +397,14 @@
             showAlert('You can request a new OTP now', 'info');
         });
 
-        // Admin role selection handler
-        window.selectAdminRole = function () {
+    </script>
+
+    <script>
+        // Admin role selection — regular script so it's available immediately
+        function selectAdminRole() {
             sessionStorage.setItem('selectedRole', 'admin');
-            window.location.reload(); // Refresh to update badge and UI state
-        };
+            window.location.reload();
+        }
     </script>
 
     <!-- Theme Toggle -->

@@ -2,7 +2,7 @@
 // APPWRITE SDK INITIALIZATION
 // ============================================
 
-import { Client, Account, Databases, Storage, Functions, Query } from 'appwrite';
+import { Client, Account, Databases, Storage, Functions, Query } from 'https://cdn.jsdelivr.net/npm/appwrite@14.0.1/+esm';
 
 // ============================================
 // CONFIGURATION
@@ -23,7 +23,7 @@ const APPWRITE_CONFIG = {
   buckets: {
     idProofs: 'id-proofs',
     qrCodes: 'qr-codes',
-    workPortfolio: 'work-portfolio'
+    workPortfolio: 'qr-codes'
   }
 };
 

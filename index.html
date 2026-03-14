@@ -155,6 +155,7 @@
       height: 100%;
       background: radial-gradient(circle, rgba(255, 107, 0, 0.1) 0%, transparent 70%);
       animation: pulse 4s ease-in-out infinite;
+      pointer-events: none;
     }
 
     .hero-content {
@@ -365,14 +366,13 @@
     }
   </style>
 
-  <script type="module">
-    import { isAuthenticated, getUserRole, redirectToDashboard, getCurrentUser } from '/js/appwrite.js';
-
-    // Role selection handler
-    window.selectRole = function (role) {
+  <script>
+    // Role selection handler — must be a regular script (not module)
+    // so it's available immediately for onclick handlers
+    function selectRole(role) {
       sessionStorage.setItem('selectedRole', role);
       window.location.href = '/login.html';
-    };
+    }
   </script>
 
   <!-- Theme Toggle -->
