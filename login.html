@@ -354,6 +354,13 @@
             showLoading('Verifying OTP...');
 
             try {
+                // Ensure no existing session is active to avoid "prohibited" error
+                try {
+                    await account.deleteSession('current');
+                } catch (e) {
+                    // Ignore if no session exists
+                }
+
                 // Verify OTP and create session
                 await account.createSession(userId, otpCode);
 
