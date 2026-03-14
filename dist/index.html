@@ -6,9 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description"
     content="GOD Services - GetOnDial Services. Connect with verified local service workers instantly.">
-  <title>GOD Services - GetOnDial Services</title>
-  <script type="module" crossorigin src="/assets/index-CVMsQ31N.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-B1OcZys5.css">
+  <title>GOD Services - GetOnDial Services</title>
+  <link rel="stylesheet" href="/css/style.css">
 </head>
 
 <body>
@@ -395,7 +394,12 @@
       <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
     </svg>
   </button>
-
+
+  <script type="module">
+    import { toggleTheme, initTheme } from '/js/theme.js';
+    window.toggleTheme = toggleTheme;
+    initTheme();
+  </script>
 
 </body>
 
