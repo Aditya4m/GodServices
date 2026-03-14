@@ -21,7 +21,7 @@ const APPWRITE_CONFIG = {
     auditLogs: 'audit-logs'
   },
   buckets: {
-    idProofs: 'id-proofs',
+    idProofs: 'qr-codes',
     qrCodes: 'qr-codes',
     workPortfolio: 'qr-codes'
   }
