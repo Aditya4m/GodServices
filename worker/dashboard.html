@@ -288,7 +288,14 @@
             showLoading('Loading dashboard...');
 
             try {
-                currentUser = await account.get();
+                try {
+                    currentUser = await account.get();
+                } catch (authError) {
+                    // Not logged in — redirect to login
+                    showAlert('Please login to access the dashboard', 'error');
+                    setTimeout(() => { window.location.href = '/login.html'; }, 1500);
+                    return;
+                }
 
                 // Get worker data
                 const workerResponse = await databases.listDocuments(
