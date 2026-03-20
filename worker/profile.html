@@ -63,14 +63,7 @@
                 <div class="form-group">
                     <label class="form-label" for="skillCategory">Skill Category</label>
                     <select id="skillCategory" class="form-select">
-                        <option value="plumber">Plumber</option>
-                        <option value="electrician">Electrician</option>
-                        <option value="ac-technician">AC Technician</option>
-                        <option value="carpenter">Carpenter</option>
-                        <option value="painter">Painter</option>
-                        <option value="cleaner">Cleaner</option>
-                        <option value="gardener">Gardener</option>
-                        <option value="mechanic">Mechanic</option>
+                        <option value="">Loading skills...</option>
                     </select>
                 </div>
                 <div class="grid grid-2 gap-md">
@@ -321,6 +314,9 @@
                     databases.listDocuments(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.users, [Query.equal('userId', currentUser.$id)])
                 ]);
 
+                // Load skill categories from services collection
+                await loadSkillCategories();
+
                 if (userResponse.documents.length > 0) {
                     userData = userResponse.documents[0];
                     document.getElementById('userNameInput').value = userData.name;
@@ -361,6 +357,46 @@
             } finally {
                 hideLoading();
             }
+        }
+
+        // Default skill categories (fallback)
+        const defaultSkillCategories = [
+            { id: 'plumber', name: 'Plumber' },
+            { id: 'electrician', name: 'Electrician' },
+            { id: 'ac-technician', name: 'AC Technician' },
+            { id: 'carpenter', name: 'Carpenter' },
+            { id: 'painter', name: 'Painter' },
+            { id: 'cleaner', name: 'Cleaner' },
+            { id: 'gardener', name: 'Gardener' },
+            { id: 'mechanic', name: 'Mechanic' }
+        ];
+
+        async function loadSkillCategories() {
+            const select = document.getElementById('skillCategory');
+            let categories = defaultSkillCategories;
+
+            try {
+                const servicesRes = await databases.listDocuments(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.services
+                );
+                if (servicesRes.documents.length > 0) {
+                    categories = servicesRes.documents.map(s => ({
+                        id: s.categoryId || s.$id,
+                        name: s.name
+                    }));
+                }
+            } catch (e) {
+                console.warn('Could not fetch services, using defaults:', e);
+            }
+
+            select.innerHTML = '';
+            categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat.id;
+                option.textContent = cat.name;
+                select.appendChild(option);
+            });
         }
 
         function loadQRPreview(fileId) {
