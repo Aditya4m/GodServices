@@ -291,7 +291,20 @@
         // Initialize
         async function init() {
             try {
-                currentUser = await account.get();
+                // Check authentication - redirect to login if not logged in
+                try {
+                    currentUser = await account.get();
+                } catch (authError) {
+                    console.error('Authentication error:', authError);
+                    if (authError.code === 401 || authError.message.includes('guests')) {
+                        showAlert('Please login to continue', 'error');
+                        setTimeout(() => {
+                            window.location.href = '/login.html';
+                        }, 1500);
+                        return;
+                    }
+                    throw authError;
+                }
 
                 // Get booking details from session storage
                 const workerId = sessionStorage.getItem('selectedWorker');
@@ -312,6 +325,12 @@
                 bookingData.workerId = workerId;
                 bookingData.serviceCategory = category;
                 bookingData.estimatedPrice = parseInt(price);
+
+                // Set minimum date/time to now (prevent selecting past dates)
+                const now = new Date();
+                const tzOffset = now.getTimezoneOffset() * 60000;
+                const localISO = new Date(now - tzOffset).toISOString().slice(0, 16);
+                document.getElementById('scheduledTime').setAttribute('min', localISO);
 
                 // Fetch worker's payment info
                 try {
@@ -358,6 +377,13 @@
             bookingData.pincode = document.getElementById('customerPincode').value.trim();
             bookingData.problemDescription = document.getElementById('problemDescription').value.trim();
             bookingData.scheduledTime = document.getElementById('scheduledTime').value;
+
+            // Validate that selected date/time is in the future
+            const selectedTime = new Date(bookingData.scheduledTime);
+            if (selectedTime <= new Date()) {
+                showAlert('Please select a future date and time.', 'error');
+                return;
+            }
 
             // Show payment modal
             showPaymentModal();
