@@ -451,34 +451,22 @@
                     }
                     showAlert('Service updated!', 'success');
                 } else {
-                    // Create new
-                    try {
-                        const doc = await databases.createDocument(
-                            APPWRITE_CONFIG.databaseId,
-                            APPWRITE_CONFIG.collections.services,
-                            ID.unique(),
-                            serviceData
-                        );
-                        serviceList.push({
-                            id: serviceData.categoryId,
-                            name: serviceData.name,
-                            icon: serviceData.icon,
-                            description: serviceData.description,
-                            basePrice: serviceData.basePrice,
-                            docId: doc.$id
-                        });
-                    } catch (dbError) {
-                        // If DB fails, still add to local list
-                        console.warn('Could not save to DB, adding locally:', dbError);
-                        serviceList.push({
-                            id: serviceData.categoryId,
-                            name: serviceData.name,
-                            icon: serviceData.icon,
-                            description: serviceData.description,
-                            basePrice: serviceData.basePrice
-                        });
-                    }
-                    showAlert('Service added!', 'success');
+                    // Create new — must succeed in DB to persist
+                    const doc = await databases.createDocument(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.services,
+                        ID.unique(),
+                        serviceData
+                    );
+                    serviceList.push({
+                        id: serviceData.categoryId,
+                        name: serviceData.name,
+                        icon: serviceData.icon,
+                        description: serviceData.description,
+                        basePrice: serviceData.basePrice,
+                        docId: doc.$id
+                    });
+                    showAlert('Service added successfully!', 'success');
                 }
 
                 closeModal();
@@ -486,7 +474,7 @@
                 displayServices();
             } catch (error) {
                 console.error('Error saving service:', error);
-                showAlert('Failed to save service', 'error');
+                showAlert('Failed to save service: ' + (error.message || 'Please check that the "services" collection exists in your Appwrite database with attributes: categoryId (string), name (string), icon (string), description (string), basePrice (integer).'), 'error');
             } finally {
                 hideLoading();
             }
