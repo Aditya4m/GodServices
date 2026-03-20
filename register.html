@@ -252,30 +252,21 @@
         const selectedRole = sessionStorage.getItem('selectedRole') || 'customer';
         document.getElementById('roleBadge').textContent = selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1);
 
-        // Show role-specific fields
-        if (selectedRole === 'worker') {
-            document.getElementById('workerFields').classList.remove('hidden');
-            loadSkillCategories();
-        } else if (selectedRole === 'customer') {
-            document.getElementById('customerFields').classList.remove('hidden');
-        }
-
-        // Default skill categories (fallback if DB fetch fails)
-        const defaultSkillCategories = [
-            { id: 'plumber', name: 'Plumber' },
-            { id: 'electrician', name: 'Electrician' },
-            { id: 'ac-technician', name: 'AC Technician' },
-            { id: 'carpenter', name: 'Carpenter' },
-            { id: 'painter', name: 'Painter' },
-            { id: 'cleaner', name: 'Cleaner' },
-            { id: 'gardener', name: 'Gardener' },
-            { id: 'mechanic', name: 'Mechanic' }
-        ];
-
         // Fetch skill categories from services collection
         async function loadSkillCategories() {
+            const defaultCategories = [
+                { id: 'plumber', name: 'Plumber' },
+                { id: 'electrician', name: 'Electrician' },
+                { id: 'ac-technician', name: 'AC Technician' },
+                { id: 'carpenter', name: 'Carpenter' },
+                { id: 'painter', name: 'Painter' },
+                { id: 'cleaner', name: 'Cleaner' },
+                { id: 'gardener', name: 'Gardener' },
+                { id: 'mechanic', name: 'Mechanic' }
+            ];
+
             const select = document.getElementById('skillCategory');
-            let categories = defaultSkillCategories;
+            let categories = defaultCategories;
 
             try {
                 const servicesRes = await databases.listDocuments(
@@ -299,6 +290,14 @@
                 option.textContent = cat.name;
                 select.appendChild(option);
             });
+        }
+
+        // Show role-specific fields
+        if (selectedRole === 'worker') {
+            document.getElementById('workerFields').classList.remove('hidden');
+            loadSkillCategories();
+        } else if (selectedRole === 'customer') {
+            document.getElementById('customerFields').classList.remove('hidden');
         }
 
         // Handle registration form submission
