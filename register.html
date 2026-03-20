@@ -274,10 +274,17 @@
                     APPWRITE_CONFIG.collections.services
                 );
                 if (servicesRes.documents.length > 0) {
-                    categories = servicesRes.documents.map(s => ({
+                    const dbCategories = servicesRes.documents.map(s => ({
                         id: s.categoryId || s.$id,
                         name: s.name
                     }));
+                    // Merge: add DB services that aren't already in defaults
+                    const existingIds = new Set(categories.map(c => c.id));
+                    dbCategories.forEach(cat => {
+                        if (!existingIds.has(cat.id)) {
+                            categories.push(cat);
+                        }
+                    });
                 }
             } catch (e) {
                 console.warn('Could not fetch services, using defaults:', e);
