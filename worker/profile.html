@@ -359,21 +359,20 @@
             }
         }
 
-        // Default skill categories (fallback)
-        const defaultSkillCategories = [
-            { id: 'plumber', name: 'Plumber' },
-            { id: 'electrician', name: 'Electrician' },
-            { id: 'ac-technician', name: 'AC Technician' },
-            { id: 'carpenter', name: 'Carpenter' },
-            { id: 'painter', name: 'Painter' },
-            { id: 'cleaner', name: 'Cleaner' },
-            { id: 'gardener', name: 'Gardener' },
-            { id: 'mechanic', name: 'Mechanic' }
-        ];
-
         async function loadSkillCategories() {
+            const defaultCategories = [
+                { id: 'plumber', name: 'Plumber' },
+                { id: 'electrician', name: 'Electrician' },
+                { id: 'ac-technician', name: 'AC Technician' },
+                { id: 'carpenter', name: 'Carpenter' },
+                { id: 'painter', name: 'Painter' },
+                { id: 'cleaner', name: 'Cleaner' },
+                { id: 'gardener', name: 'Gardener' },
+                { id: 'mechanic', name: 'Mechanic' }
+            ];
+
             const select = document.getElementById('skillCategory');
-            let categories = defaultSkillCategories;
+            let categories = defaultCategories;
 
             try {
                 const servicesRes = await databases.listDocuments(
