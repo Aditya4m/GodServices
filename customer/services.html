@@ -40,14 +40,6 @@
                     <label class="form-label" for="categoryFilter">Service Category</label>
                     <select id="categoryFilter" class="form-select">
                         <option value="">All Categories</option>
-                        <option value="plumber">Plumber</option>
-                        <option value="electrician">Electrician</option>
-                        <option value="ac-technician">AC Technician</option>
-                        <option value="carpenter">Carpenter</option>
-                        <option value="painter">Painter</option>
-                        <option value="cleaner">Cleaner</option>
-                        <option value="gardener">Gardener</option>
-                        <option value="mechanic">Mechanic</option>
                     </select>
                 </div>
 
@@ -338,10 +330,54 @@
         let currentUser = null;
         let allWorkers = [];
         let filteredWorkers = [];
+        let serviceCategories = {}; // id -> name map
+        let serviceCategoryIcons = {}; // id -> icon map
 
         // Get URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const selectedCategory = urlParams.get('category');
+
+        // Load service categories from DB
+        async function loadCategoryFilter() {
+            const defaultCategories = [
+                { id: 'plumber', name: 'Plumber', icon: '🔧' },
+                { id: 'electrician', name: 'Electrician', icon: '⚡' },
+                { id: 'ac-technician', name: 'AC Technician', icon: '❄️' },
+                { id: 'carpenter', name: 'Carpenter', icon: '🪚' },
+                { id: 'painter', name: 'Painter', icon: '🎨' },
+                { id: 'cleaner', name: 'Cleaner', icon: '🧹' },
+                { id: 'gardener', name: 'Gardener', icon: '🌱' },
+                { id: 'mechanic', name: 'Mechanic', icon: '🔩' }
+            ];
+
+            let categories = defaultCategories;
+            try {
+                const servicesRes = await databases.listDocuments(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.services
+                );
+                if (servicesRes.documents.length > 0) {
+                    categories = servicesRes.documents.map(s => ({
+                        id: s.categoryId || s.$id,
+                        name: s.name,
+                        icon: s.icon || '⚙️'
+                    }));
+                }
+            } catch (e) {
+                console.warn('Could not fetch services, using defaults:', e);
+            }
+
+            const select = document.getElementById('categoryFilter');
+            select.innerHTML = '<option value="">All Categories</option>';
+            categories.forEach(cat => {
+                serviceCategories[cat.id] = cat.name;
+                serviceCategoryIcons[cat.id] = cat.icon;
+                const option = document.createElement('option');
+                option.value = cat.id;
+                option.textContent = cat.name;
+                select.appendChild(option);
+            });
+        }
 
         // Initialize
         async function init() {
@@ -353,7 +389,6 @@
                     currentUser = await account.get();
                 } catch (authError) {
                     console.error('Authentication error:', authError);
-                    // User not logged in, redirect to login
                     if (authError.code === 401 || authError.message.includes('guests')) {
                         showAlert('Please login to continue', 'error');
                         setTimeout(() => {
@@ -364,20 +399,14 @@
                     throw authError;
                 }
 
-                // Set category filter if provided
+                // Load category filter from DB
+                await loadCategoryFilter();
+
+                // Set category filter if provided via URL
                 if (selectedCategory) {
                     document.getElementById('categoryFilter').value = selectedCategory;
-                    const categoryNames = {
-                        'plumber': 'Plumber',
-                        'electrician': 'Electrician',
-                        'ac-technician': 'AC Technician',
-                        'carpenter': 'Carpenter',
-                        'painter': 'Painter',
-                        'cleaner': 'Cleaner',
-                        'gardener': 'Gardener',
-                        'mechanic': 'Mechanic'
-                    };
-                    document.getElementById('categoryName').textContent = `${categoryNames[selectedCategory]} Services`;
+                    const catName = serviceCategories[selectedCategory] || selectedCategory;
+                    document.getElementById('categoryName').textContent = `${catName} Services`;
                 }
 
                 await loadWorkers();
@@ -390,42 +419,29 @@
             }
         }
 
-        // Load workers
+        // Load workers — always fetches ALL approved+active workers, filters client-side
         async function loadWorkers() {
             try {
                 let workersResponse;
 
                 try {
-                    const queries = [
-                        Query.equal('isApproved', true),
-                        Query.equal('isActive', true)
-                    ];
-
-                    if (selectedCategory) {
-                        queries.push(Query.equal('skillCategory', selectedCategory));
-                    }
-
                     workersResponse = await databases.listDocuments(
                         APPWRITE_CONFIG.databaseId,
                         APPWRITE_CONFIG.collections.workers,
-                        queries
+                        [
+                            Query.equal('isApproved', true),
+                            Query.equal('isActive', true)
+                        ]
                     );
                 } catch (queryError) {
-                    // Fallback: fetch all workers and filter client-side
                     console.warn('Worker attributes not indexed, using fallback:', queryError);
                     const allWorkersResponse = await databases.listDocuments(
                         APPWRITE_CONFIG.databaseId,
                         APPWRITE_CONFIG.collections.workers
                     );
-
-                    // Filter client-side
-                    const filtered = allWorkersResponse.documents.filter(w => {
-                        if (!w.isApproved || !w.isActive) return false;
-                        if (selectedCategory && w.skillCategory !== selectedCategory) return false;
-                        return true;
-                    });
-
-                    workersResponse = { documents: filtered };
+                    workersResponse = {
+                        documents: allWorkersResponse.documents.filter(w => w.isApproved && w.isActive)
+                    };
                 }
 
                 allWorkers = workersResponse.documents;
@@ -439,13 +455,11 @@
                     return;
                 }
 
-                // Fetch all users (we'll filter client-side since Query.equal doesn't support arrays)
                 const usersResponse = await databases.listDocuments(
                     APPWRITE_CONFIG.databaseId,
                     APPWRITE_CONFIG.collections.users
                 );
 
-                // Create a map of userId to name
                 const userNameMap = {};
                 usersResponse.documents.forEach(user => {
                     if (userIds.includes(user.userId)) {
@@ -453,14 +467,12 @@
                     }
                 });
 
-                // Add names to worker objects
                 allWorkers.forEach(worker => {
                     worker.name = userNameMap[worker.userId] || 'Worker';
                 });
 
-                filteredWorkers = [...allWorkers];
-
-                displayWorkers();
+                // Apply current filters
+                applyFilters();
 
             } catch (error) {
                 console.error('Error loading workers:', error);
@@ -483,16 +495,13 @@
             emptyState.classList.add('hidden');
             workersGrid.innerHTML = '';
 
-            const categoryIcons = {
-                'plumber': '🔧',
-                'electrician': '⚡',
-                'ac-technician': '❄️',
-                'carpenter': '🪚',
-                'painter': '🎨',
-                'cleaner': '🧹',
-                'gardener': '🌱',
-                'mechanic': '🔩'
+            // Use dynamic icons from services, fallback to defaults
+            const defaultIcons = {
+                'plumber': '🔧', 'electrician': '⚡', 'ac-technician': '❄️',
+                'carpenter': '🪚', 'painter': '🎨', 'cleaner': '🧹',
+                'gardener': '🌱', 'mechanic': '🔩'
             };
+            const categoryIcons = { ...defaultIcons, ...serviceCategoryIcons };
 
             filteredWorkers.forEach(worker => {
                 const workerCard = document.createElement('div');
@@ -555,26 +564,29 @@
             loadAllPortfolios();
         }
 
-        // Apply filters
-        document.getElementById('applyFiltersBtn').addEventListener('click', () => {
-            console.log('Apply Filters button clicked');
+        // Apply filters (reusable)
+        function applyFilters() {
             const category = document.getElementById('categoryFilter').value;
             const pincode = document.getElementById('pincodeFilter').value.trim();
 
-            console.log('Filters:', { category, pincode });
-            console.log('All workers count:', allWorkers.length);
-
-            // Filter
             filteredWorkers = (allWorkers || []).filter(worker => {
                 if (category && worker.skillCategory !== category) return false;
                 if (pincode && (!worker.serviceArea || !worker.serviceArea.includes(pincode))) return false;
                 return true;
             });
 
-            console.log('Filtered workers count:', filteredWorkers.length);
+            // Update header text
+            if (category && serviceCategories[category]) {
+                document.getElementById('categoryName').textContent = `${serviceCategories[category]} Services`;
+            } else {
+                document.getElementById('categoryName').textContent = 'Browse verified service workers in your area';
+            }
 
             displayWorkers();
-        });
+        }
+
+        // Apply filters button
+        document.getElementById('applyFiltersBtn').addEventListener('click', applyFilters);
 
         // Load portfolio images for all displayed workers
         async function loadAllPortfolios() {
