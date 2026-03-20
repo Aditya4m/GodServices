@@ -297,24 +297,50 @@
                 allWorkers = workersRes.documents;
                 allBookings = bookingsRes.documents;
 
-                // Try to load services from DB, fallback to defaults
+                // Try to load services from DB, seed defaults if empty
                 try {
                     const servicesRes = await databases.listDocuments(
                         APPWRITE_CONFIG.databaseId,
                         APPWRITE_CONFIG.collections.services
                     );
-                    serviceList = servicesRes.documents.length > 0
-                        ? servicesRes.documents.map(s => ({
+                    if (servicesRes.documents.length > 0) {
+                        serviceList = servicesRes.documents.map(s => ({
                             id: s.categoryId || s.$id,
                             name: s.name,
                             icon: s.icon || '⚙️',
                             description: s.description || '',
                             basePrice: s.basePrice || 0,
                             docId: s.$id
-                        }))
-                        : [...defaultCategories];
+                        }));
+                    } else {
+                        // DB is empty — seed all default categories into Appwrite
+                        showLoading('Setting up default services...');
+                        for (const cat of defaultCategories) {
+                            try {
+                                const doc = await databases.createDocument(
+                                    APPWRITE_CONFIG.databaseId,
+                                    APPWRITE_CONFIG.collections.services,
+                                    ID.unique(),
+                                    {
+                                        categoryId: cat.id,
+                                        name: cat.name,
+                                        icon: cat.icon,
+                                        description: cat.description,
+                                        basePrice: cat.basePrice,
+                                        isActive: true
+                                    }
+                                );
+                                serviceList.push({ ...cat, docId: doc.$id });
+                            } catch (seedErr) {
+                                console.error('Failed to seed service:', cat.name, seedErr);
+                            }
+                        }
+                        if (serviceList.length > 0) {
+                            showAlert('Default services added to database!', 'success');
+                        }
+                    }
                 } catch (e) {
-                    console.warn('Services collection not available, using defaults:', e);
+                    console.warn('Services collection not available, using local defaults:', e);
                     serviceList = [...defaultCategories];
                 }
 
