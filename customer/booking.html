@@ -283,7 +283,7 @@
     </style>
 
     <script type="module">
-        import { account, databases, APPWRITE_CONFIG, showLoading, hideLoading, showAlert, logout, requireAuth } from '/js/appwrite.js';
+        import { account, databases, APPWRITE_CONFIG, showLoading, hideLoading, showAlert, logout } from '/js/appwrite.js';
         import { Query } from 'https://cdn.jsdelivr.net/npm/appwrite@14.0.1/+esm';
 
         let currentUser = null;
@@ -297,7 +297,32 @@
             showLoading('Loading bookings...');
 
             try {
-                currentUser = await requireAuth('admin');
+                currentUser = await account.get();
+
+                // Verify admin (with fallback)
+                let isAdmin = false;
+                try {
+                    const userResponse = await databases.listDocuments(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.users,
+                        [Query.equal('userId', currentUser.$id)]
+                    );
+                    isAdmin = userResponse.documents.length > 0 && userResponse.documents[0].role === 'admin';
+                } catch (queryError) {
+                    console.warn('userId query failed, using fallback:', queryError);
+                    const allUsersRes = await databases.listDocuments(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.collections.users
+                    );
+                    const adminUser = allUsersRes.documents.find(u => u.userId === currentUser.$id);
+                    isAdmin = adminUser && adminUser.role === 'admin';
+                }
+
+                if (!isAdmin) {
+                    showAlert('Unauthorized access. Admin only.', 'error');
+                    setTimeout(() => { window.location.href = '/index.html'; }, 2000);
+                    return;
+                }
 
                 // Check URL params for customer filter
                 const urlParams = new URLSearchParams(window.location.search);
