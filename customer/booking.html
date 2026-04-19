@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book Service - GOD Services</title>
+    <title>Booking Management - GOD Services Admin</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 
@@ -13,155 +13,91 @@
     <!-- Navigation -->
     <nav class="navbar">
         <div class="container flex-between">
-            <div class="navbar-brand">GOD SERVICES</div>
+            <div class="navbar-brand">GOD SERVICES - ADMIN</div>
             <ul class="navbar-nav">
-                <li><a href="/customer/dashboard.html" class="nav-link">Dashboard</a></li>
-                <li><a href="/customer/services.html" class="nav-link">Services</a></li>
-                <li><a href="/customer/history.html" class="nav-link">My Bookings</a></li>
-                <li><a href="/customer/profile.html" class="nav-link">Profile</a></li>
+                <li><a href="/admin/dashboard.html" class="nav-link">Dashboard</a></li>
+                <li><a href="/admin/workers.html" class="nav-link">Workers</a></li>
+                <li><a href="/admin/customers.html" class="nav-link">Customers</a></li>
+                <li><a href="/admin/bookings.html" class="nav-link active">Bookings</a></li>
+                <li><a href="/admin/services.html" class="nav-link">Services</a></li>
                 <li><button class="btn btn-ghost btn-sm" id="logoutBtn">Logout</button></li>
             </ul>
         </div>
     </nav>
 
     <!-- Main Content -->
-    <main class="container" style="padding: var(--spacing-xl) var(--spacing-md); max-width: 800px;">
+    <main class="container" style="padding: var(--spacing-xl) var(--spacing-md);">
 
         <!-- Header -->
-        <section class="page-header">
-            <h1>Book Service</h1>
-            <p class="text-secondary">Fill in the details to book your service</p>
+        <section class="page-header flex-between">
+            <div>
+                <h1>Booking Management</h1>
+                <p class="text-secondary">Track and manage all platform bookings</p>
+            </div>
         </section>
 
-        <!-- Booking Form -->
-        <section class="booking-form-section card mt-lg">
-            <form id="bookingForm">
+        <!-- Stats -->
+        <section class="stats-section grid grid-4 gap-md mt-lg">
+            <div class="stat-card">
+                <div class="stat-value" id="totalBookings">0</div>
+                <div class="stat-label">Total Bookings</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="pendingCount">0</div>
+                <div class="stat-label">Pending</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="activeCount">0</div>
+                <div class="stat-label">Active</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="completedCount">0</div>
+                <div class="stat-label">Completed</div>
+            </div>
+        </section>
 
-                <!-- Service Info -->
-                <div class="form-section">
-                    <h3 class="form-section-title">Service Information</h3>
+        <!-- Tabs -->
+        <section class="tabs-section mt-xl">
+            <h2>All Bookings</h2>
+            <div class="tabs mt-md">
+                <button class="tab-btn active" data-tab="all">All (<span id="tabAll">0</span>)</button>
+                <button class="tab-btn" data-tab="pending">Pending (<span id="tabPending">0</span>)</button>
+                <button class="tab-btn" data-tab="accepted">Accepted (<span id="tabAccepted">0</span>)</button>
+                <button class="tab-btn" data-tab="completed">Completed (<span id="tabCompleted">0</span>)</button>
+                <button class="tab-btn" data-tab="cancelled">Cancelled (<span id="tabCancelled">0</span>)</button>
+            </div>
+        </section>
 
-                    <div class="form-group">
-                        <label class="form-label">Service Category</label>
-                        <input type="text" id="serviceCategory" class="form-input" readonly>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Estimated Price</label>
-                        <input type="text" id="estimatedPrice" class="form-input" readonly>
-                    </div>
-                </div>
-
-                <!-- Customer Details -->
-                <div class="form-section">
-                    <h3 class="form-section-title">Your Details</h3>
-
-                    <div class="form-group">
-                        <label class="form-label" for="customerName">Full Name</label>
-                        <input type="text" id="customerName" class="form-input" placeholder="Enter your name" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="customerPhone">Phone Number</label>
-                        <input type="tel" id="customerPhone" class="form-input" placeholder="+91 XXXXXXXXXX" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="customerAddress">Address</label>
-                        <textarea id="customerAddress" class="form-textarea" placeholder="Enter your complete address"
-                            rows="3" required></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="customerPincode">Pincode</label>
-                        <input type="text" id="customerPincode" class="form-input" placeholder="e.g., 110001"
-                            pattern="[0-9]{6}" required>
-                    </div>
-                </div>
-
-                <!-- Problem Description -->
-                <div class="form-section">
-                    <h3 class="form-section-title">Problem Description</h3>
-
-                    <div class="form-group">
-                        <label class="form-label" for="problemDescription">Describe the issue</label>
-                        <textarea id="problemDescription" class="form-textarea"
-                            placeholder="Please describe the problem in detail..." rows="5" required></textarea>
-                        <p class="form-hint">Be as specific as possible to help the worker prepare</p>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="scheduledTime">Preferred Date & Time</label>
-                        <input type="datetime-local" id="scheduledTime" class="form-input" required>
-                    </div>
-                </div>
-
-                <!-- Submit Button -->
-                <button type="submit" class="btn btn-primary btn-block btn-lg">
-                    Proceed to Payment
-                </button>
-
-            </form>
+        <!-- Bookings List -->
+        <section class="bookings-list mt-md">
+            <div id="bookingsContainer">
+                <!-- Bookings loaded dynamically -->
+            </div>
         </section>
 
     </main>
 
-    <!-- Payment Modal -->
-    <div class="modal-overlay" id="paymentModal">
-        <div class="modal">
+    <!-- Update Status Modal -->
+    <div class="modal-overlay" id="statusModal">
+        <div class="modal" style="max-width: 500px;">
             <div class="modal-header">
-                <h3 class="modal-title">Complete Payment</h3>
-                <button class="modal-close" onclick="closePaymentModal()">&times;</button>
+                <h3 class="modal-title">Update Booking Status</h3>
+                <button class="modal-close" onclick="closeStatusModal()">&times;</button>
             </div>
             <div class="modal-body">
-
-                <!-- Payment Info -->
-                <div class="payment-info">
-                    <div class="detail-row">
-                        <span class="detail-label">Service:</span>
-                        <span class="detail-value" id="paymentService"></span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Amount:</span>
-                        <span class="detail-value" id="paymentAmount"></span>
-                    </div>
+                <div class="form-group">
+                    <label class="form-label">New Status</label>
+                    <select id="newStatus" class="form-select">
+                        <option value="pending">Pending</option>
+                        <option value="accepted">Accepted</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
                 </div>
-
-
-
-                <!-- QR Code -->
-                <div class="qr-code-container" id="qrCodeContainer">
-                    <div id="qrCode"></div>
-                    <p class="text-secondary mt-sm">Scan with any UPI app</p>
-                </div>
-
-                <!-- UPI Apps (Mobile Only) -->
-                <div class="upi-apps" id="upiApps">
-                    <p class="text-secondary mb-sm">Or pay with:</p>
-                    <div class="flex gap-sm" style="justify-content: center; flex-wrap: wrap;">
-                        <button class="btn btn-secondary btn-sm" onclick="openUPIApp('gpay')">Google Pay</button>
-                        <button class="btn btn-secondary btn-sm" onclick="openUPIApp('phonepe')">PhonePe</button>
-                        <button class="btn btn-secondary btn-sm" onclick="openUPIApp('paytm')">Paytm</button>
-                    </div>
-                </div>
-
-                <!-- UTR Input -->
-                <div class="utr-section mt-lg">
-                    <div class="form-group">
-                        <label class="form-label" for="utrNumber">Transaction ID (UTR)</label>
-                        <input type="text" id="utrNumber" class="form-input" placeholder="Enter 12-digit UTR"
-                            maxlength="12" pattern="[0-9]{12}">
-                        <p class="form-hint">Enter the 12-digit transaction ID from your payment app</p>
-                    </div>
-
-                    <button class="btn btn-ghost btn-block" onclick="submitPayment()">
-                        I have Paid via UPI
-                    </button>
-                </div>
+                <button class="btn btn-primary btn-block" onclick="saveStatus()">Update Status</button>
             </div>
-
         </div>
-    </div>
     </div>
 
     <style>
@@ -170,100 +106,161 @@
             margin-bottom: var(--spacing-xs);
         }
 
-        .booking-form-section {
-            padding: var(--spacing-xl);
+        .tabs-section {
+            margin-top: var(--spacing-xxl);
         }
 
-        .form-section {
-            margin-bottom: var(--spacing-xl);
-            padding-bottom: var(--spacing-lg);
+        .tabs-section h2 {
+            margin-bottom: var(--spacing-lg);
+            padding-bottom: var(--spacing-sm);
+            border-bottom: 2px solid var(--color-border);
+        }
+
+        .tabs {
+            display: flex;
+            gap: var(--spacing-sm);
+            border-bottom: 2px solid var(--color-border);
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            font-family: var(--font-display);
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: transparent;
+            border: none;
+            color: var(--color-text-secondary);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            position: relative;
+        }
+
+        .tab-btn::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--color-accent-primary);
+            transition: width var(--transition-normal);
+        }
+
+        .tab-btn:hover,
+        .tab-btn.active {
+            color: var(--color-accent-primary);
+        }
+
+        .tab-btn.active::after {
+            width: 100%;
+        }
+
+        .booking-card {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-left: 4px solid var(--color-accent-primary);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-md);
+            transition: all var(--transition-fast);
+        }
+
+        .booking-card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .booking-card[data-status="pending"] {
+            border-left-color: var(--color-warning);
+        }
+
+        .booking-card[data-status="accepted"] {
+            border-left-color: var(--color-info);
+        }
+
+        .booking-card[data-status="completed"] {
+            border-left-color: var(--color-success);
+        }
+
+        .booking-card[data-status="cancelled"] {
+            border-left-color: var(--color-error);
+        }
+
+        .booking-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .booking-info h3 {
+            font-size: 1.4rem;
+            color: var(--color-text-primary);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .booking-id {
+            font-size: 0.8rem;
+            color: var(--color-text-muted);
+            font-family: var(--font-display);
+            letter-spacing: 0.05em;
+        }
+
+        .booking-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+            padding: var(--spacing-md) 0;
+            border-top: 1px solid var(--color-border);
             border-bottom: 1px solid var(--color-border);
         }
 
-        .form-section:last-of-type {
-            border-bottom: none;
+        .detail-item {
+            font-size: 0.9rem;
         }
 
-        .form-section-title {
-            font-size: 1.5rem;
-            color: var(--color-accent-primary);
-            margin-bottom: var(--spacing-md);
+        .detail-item strong {
+            color: var(--color-text-secondary);
+            display: block;
+            margin-bottom: var(--spacing-xs);
         }
 
-        .payment-info {
-            background: var(--color-bg-secondary);
-            border: 1px solid var(--color-border);
+        .detail-item span {
+            color: var(--color-text-primary);
+        }
+
+        .booking-problem {
+            padding: var(--spacing-sm);
+            background: var(--color-bg-elevated);
             border-radius: var(--radius-md);
-            padding: var(--spacing-md);
-            margin-bottom: var(--spacing-lg);
-        }
-
-        .detail-row {
-            display: flex;
-            justify-content: space-between;
-            padding: var(--spacing-xs) 0;
-            font-size: 1rem;
-        }
-
-        .detail-label {
+            margin-bottom: var(--spacing-md);
+            font-size: 0.9rem;
             color: var(--color-text-secondary);
         }
 
-        .detail-value {
+        .booking-problem strong {
             color: var(--color-text-primary);
-            font-weight: 600;
         }
 
-        .payment-section h4 {
-            font-size: 1.25rem;
-            color: var(--color-text-primary);
-            margin-bottom: var(--spacing-md);
-            text-align: center;
-        }
-
-        .qr-code-container {
-            text-align: center;
-            padding: var(--spacing-lg);
-            background: white;
-            border-radius: var(--radius-md);
-            margin-bottom: var(--spacing-md);
-        }
-
-        #qrCode {
+        .booking-actions {
             display: flex;
-            justify-content: center;
-            margin-bottom: var(--spacing-sm);
+            gap: var(--spacing-sm);
+            flex-wrap: wrap;
         }
 
-        .upi-apps {
+        .empty-state {
             text-align: center;
-            margin-bottom: var(--spacing-md);
-        }
-
-        .utr-section {
-            border-top: 1px solid var(--color-border);
-            padding-top: var(--spacing-lg);
-        }
-
-
-
-        .payment-divider {
-            display: flex;
-            align-items: center;
-            gap: var(--spacing-md);
-            margin: var(--spacing-lg) 0;
+            padding: var(--spacing-xl);
             color: var(--color-text-muted);
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
         }
 
-        .payment-divider::before,
-        .payment-divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: var(--color-border);
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: var(--spacing-md);
+            opacity: 1;
         }
 
         @media (max-width: 768px) {
@@ -271,272 +268,256 @@
                 display: none;
             }
 
-            .booking-form-section {
-                padding: var(--spacing-md);
+            .tabs {
+                flex-direction: column;
+            }
+
+            .booking-details {
+                grid-template-columns: 1fr;
+            }
+
+            .booking-actions {
+                flex-direction: column;
             }
         }
     </style>
 
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-
     <script type="module">
-        import { account, databases, storage, APPWRITE_CONFIG, showLoading, hideLoading, showAlert, logout } from '/js/appwrite.js';
-        import { ID, Query } from 'https://cdn.jsdelivr.net/npm/appwrite@14.0.1/+esm';
+        import { account, databases, APPWRITE_CONFIG, showLoading, hideLoading, showAlert, logout, requireAuth } from '/js/appwrite.js';
+        import { Query } from 'https://cdn.jsdelivr.net/npm/appwrite@14.0.1/+esm';
 
         let currentUser = null;
-        let bookingData = {};
-        let bookingId = null;
-        let workerPayment = { upiId: null, qrCodeFileId: null }; // worker's payment info
+        let allBookings = [];
+        let allUsers = [];
+        let allWorkers = [];
+        let currentTab = 'all';
+        let editingBookingId = null;
 
-        // Initialize
         async function init() {
+            showLoading('Loading bookings...');
+
             try {
-                // Check authentication - redirect to login if not logged in
+                currentUser = await requireAuth('admin');
+
+                // Check URL params for customer filter
+                const urlParams = new URLSearchParams(window.location.search);
+                const customerFilter = urlParams.get('customer');
+
+                // Load all data (each with its own error handling)
                 try {
-                    currentUser = await account.get();
-                } catch (authError) {
-                    console.error('Authentication error:', authError);
-                    if (authError.code === 401 || authError.message.includes('guests')) {
-                        showAlert('Please login to continue', 'error');
-                        setTimeout(() => {
-                            window.location.href = '/login.html';
-                        }, 1500);
-                        return;
-                    }
-                    throw authError;
-                }
+                    const bookingsRes = await databases.listDocuments(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.bookings);
+                    allBookings = bookingsRes.documents;
+                } catch (e) { console.warn('Could not load bookings:', e); }
 
-                // Get booking details from session storage
-                const workerId = sessionStorage.getItem('selectedWorker');
-                const category = sessionStorage.getItem('serviceCategory');
-                const price = sessionStorage.getItem('estimatedPrice');
-
-                if (!workerId || !category) {
-                    showAlert('Invalid booking. Please select a worker first.', 'error');
-                    setTimeout(() => {
-                        window.location.href = '/customer/services.html';
-                    }, 2000);
-                    return;
-                }
-
-                document.getElementById('serviceCategory').value = category.replace('-', ' ').toUpperCase();
-                document.getElementById('estimatedPrice').value = `₹${price}/hour`;
-
-                bookingData.workerId = workerId;
-                bookingData.serviceCategory = category;
-                bookingData.estimatedPrice = parseInt(price);
-
-                // Set minimum date/time to now (prevent selecting past dates)
-                const now = new Date();
-                const tzOffset = now.getTimezoneOffset() * 60000;
-                const localISO = new Date(now - tzOffset).toISOString().slice(0, 16);
-                document.getElementById('scheduledTime').setAttribute('min', localISO);
-
-                // Fetch worker's payment info
                 try {
-                    let workerDoc = null;
-                    // selectedWorker is the worker document $id, so fetch directly
-                    try {
-                        workerDoc = await databases.getDocument(
-                            APPWRITE_CONFIG.databaseId,
-                            APPWRITE_CONFIG.collections.workers,
-                            workerId
-                        );
-                    } catch (e) {
-                        // Fallback: try querying by userId
-                        const res = await databases.listDocuments(
-                            APPWRITE_CONFIG.databaseId,
-                            APPWRITE_CONFIG.collections.workers,
-                            [Query.equal('userId', workerId)]
-                        );
-                        if (res.documents.length > 0) {
-                            workerDoc = res.documents[0];
-                        }
+                    const usersRes = await databases.listDocuments(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.users);
+                    allUsers = usersRes.documents;
+                } catch (e) { console.warn('Could not load users:', e); }
+
+                try {
+                    const workersRes = await databases.listDocuments(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.workers);
+                    allWorkers = workersRes.documents;
+                } catch (e) { console.warn('Could not load workers:', e); }
+
+                // Apply customer filter from URL
+                if (customerFilter) {
+                    allBookings = allBookings.filter(b => b.customerId === customerFilter);
+                    const customerUser = allUsers.find(u => u.userId === customerFilter);
+                    if (customerUser) {
+                        document.querySelector('.page-header p').textContent =
+                            `Showing bookings for ${customerUser.name}`;
                     }
-                    if (workerDoc) {
-                        workerPayment.upiId = workerDoc.upiId || null;
-                        workerPayment.qrCodeFileId = workerDoc.qrCodeFileId || null;
-                    }
-                } catch (err) {
-                    console.warn('Could not fetch worker payment info:', err);
                 }
+
+                updateStats();
+                updateTabCounts();
+                displayBookings();
 
             } catch (error) {
                 console.error('Initialization error:', error);
-                showAlert('Failed to load booking form. Please try again.', 'error');
-            }
-        }
-
-        // Handle form submission
-        document.getElementById('bookingForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            bookingData.customerName = document.getElementById('customerName').value.trim();
-            bookingData.customerPhone = document.getElementById('customerPhone').value.trim();
-            bookingData.location = document.getElementById('customerAddress').value.trim();
-            bookingData.pincode = document.getElementById('customerPincode').value.trim();
-            bookingData.problemDescription = document.getElementById('problemDescription').value.trim();
-            bookingData.scheduledTime = document.getElementById('scheduledTime').value;
-
-            // Validate that selected date/time is in the future
-            const selectedTime = new Date(bookingData.scheduledTime);
-            if (selectedTime <= new Date()) {
-                showAlert('Please select a future date and time.', 'error');
-                return;
-            }
-
-            // Show payment modal
-            showPaymentModal();
-        });
-
-        // Show payment modal
-        function showPaymentModal() {
-            document.getElementById('paymentService').textContent = bookingData.serviceCategory.replace('-', ' ').toUpperCase();
-            document.getElementById('paymentAmount').textContent = `₹${bookingData.estimatedPrice}`;
-
-            const qrContainer = document.getElementById('qrCode');
-            qrContainer.innerHTML = '';
-
-            if (workerPayment.qrCodeFileId) {
-                // Priority 1: Show uploaded QR image
-                const imgUrl = storage.getFileView(
-                    APPWRITE_CONFIG.buckets.qrCodes,
-                    workerPayment.qrCodeFileId
-                ).toString();
-
-                // create image element with fallback
-                const img = document.createElement('img');
-                img.src = imgUrl;
-                img.alt = "Worker QR Code";
-                img.style.cssText = "max-width:200px;max-height:200px;border-radius:8px;object-fit:contain;";
-
-                img.onerror = function () {
-                    console.warn("Uploaded QR failed to load (check bucket permissions). Falling back to UPI ID.");
-                    qrContainer.innerHTML = ''; // Clear broken image
-                    generateUPIQRCode(qrContainer);
-                };
-
-                qrContainer.appendChild(img);
-
-            } else {
-                generateUPIQRCode(qrContainer);
-            }
-
-            document.getElementById('paymentModal').classList.add('active');
-        }
-
-        // Helper to generate UPI QR from ID
-        function generateUPIQRCode(container) {
-            if (workerPayment.upiId) {
-                // Priority 2: Generate QR from worker's UPI ID
-                const upiString = `upi://pay?pa=${workerPayment.upiId}&pn=GOD Services&am=${bookingData.estimatedPrice}&cu=INR`;
-                new QRCode(container, {
-                    text: upiString,
-                    width: 200,
-                    height: 200,
-                    colorDark: '#000000',
-                    colorLight: '#ffffff'
-                });
-            } else {
-                // Priority 3: No payment method set
-                container.innerHTML = `
-                    <div style="padding:1.5rem;text-align:center;color:#888;">
-                        <div style="font-size:2.5rem;">⚠️</div>
-                        <p style="margin-top:0.5rem;">Worker hasn't set up payment yet.<br>Please contact them directly.</p>
-                    </div>`;
-                document.getElementById('upiApps').style.display = 'none';
-            }
-        }
-
-        // Close payment modal
-        window.closePaymentModal = function () {
-            document.getElementById('paymentModal').classList.remove('active');
-        };
-
-        // Open UPI app
-        window.openUPIApp = function (app) {
-            const upiId = workerPayment.upiId;
-            if (!upiId) {
-                showAlert('Worker UPI ID not available.', 'error');
-                return;
-            }
-            const appSchemes = {
-                gpay: `gpay://upi/pay?pa=${upiId}&pn=GOD Services&am=${bookingData.estimatedPrice}&cu=INR`,
-                phonepe: `phonepe://pay?pa=${upiId}&pn=GOD Services&am=${bookingData.estimatedPrice}&cu=INR`,
-                paytm: `paytmmp://pay?pa=${upiId}&pn=GOD Services&am=${bookingData.estimatedPrice}&cu=INR`
-            };
-            window.location.href = appSchemes[app] || `upi://pay?pa=${upiId}&pn=GOD Services&am=${bookingData.estimatedPrice}&cu=INR`;
-        };
-
-
-
-        // Submit UPI payment (fallback)
-        window.submitPayment = async function () {
-            const utr = document.getElementById('utrNumber').value.trim();
-
-            if (!utr || utr.length !== 12) {
-                showAlert('Please enter a valid 12-digit UTR number', 'error');
-                return;
-            }
-
-            await createBooking({
-                paymentStatus: 'paid',
-                paymentMethod: 'upi',
-                utr: utr
-            });
-        };
-
-        // Create booking in Appwrite
-        async function createBooking(paymentInfo) {
-            showLoading('Creating booking...');
-
-            try {
-                const booking = await databases.createDocument(
-                    APPWRITE_CONFIG.databaseId,
-                    APPWRITE_CONFIG.collections.bookings,
-                    ID.unique(),
-                    {
-                        customerId: currentUser.$id,
-                        workerId: bookingData.workerId,
-                        serviceCategory: bookingData.serviceCategory,
-                        problemDescription: bookingData.problemDescription,
-                        location: bookingData.location,
-                        pincode: bookingData.pincode,
-                        status: 'pending',
-                        scheduledTime: bookingData.scheduledTime,
-                        estimatedPrice: bookingData.estimatedPrice,
-                        paymentStatus: paymentInfo.paymentStatus,
-                        utr: paymentInfo.utr || '',
-                        createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString()
-                    }
-                );
-
-                bookingId = booking.$id;
-
-                showAlert('Booking created successfully! Worker will be notified.', 'success');
-
-                // Clear session storage
-                sessionStorage.removeItem('selectedWorker');
-                sessionStorage.removeItem('serviceCategory');
-                sessionStorage.removeItem('estimatedPrice');
-
-                setTimeout(() => {
-                    window.location.href = '/customer/dashboard.html';
-                }, 2000);
-
-            } catch (error) {
-                console.error('Booking creation error:', error);
-                showAlert(error.message || 'Failed to create booking. Please try again.', 'error');
+                showAlert('Failed to load bookings.', 'error');
             } finally {
                 hideLoading();
             }
         }
 
-        // Logout handler
+        function updateStats() {
+            document.getElementById('totalBookings').textContent = allBookings.length;
+            document.getElementById('pendingCount').textContent = allBookings.filter(b => b.status === 'pending').length;
+            document.getElementById('activeCount').textContent = allBookings.filter(b => ['accepted', 'in-progress'].includes(b.status)).length;
+            document.getElementById('completedCount').textContent = allBookings.filter(b => b.status === 'completed').length;
+        }
+
+        function updateTabCounts() {
+            document.getElementById('tabAll').textContent = allBookings.length;
+            document.getElementById('tabPending').textContent = allBookings.filter(b => b.status === 'pending').length;
+            document.getElementById('tabAccepted').textContent = allBookings.filter(b => ['accepted', 'in-progress'].includes(b.status)).length;
+            document.getElementById('tabCompleted').textContent = allBookings.filter(b => b.status === 'completed').length;
+            document.getElementById('tabCancelled').textContent = allBookings.filter(b => b.status === 'cancelled').length;
+        }
+
+        function displayBookings() {
+            const container = document.getElementById('bookingsContainer');
+
+            let filtered = allBookings;
+
+            if (currentTab === 'pending') {
+                filtered = allBookings.filter(b => b.status === 'pending');
+            } else if (currentTab === 'accepted') {
+                filtered = allBookings.filter(b => ['accepted', 'in-progress'].includes(b.status));
+            } else if (currentTab === 'completed') {
+                filtered = allBookings.filter(b => b.status === 'completed');
+            } else if (currentTab === 'cancelled') {
+                filtered = allBookings.filter(b => b.status === 'cancelled');
+            }
+
+            // Sort by newest first
+            filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <p>No bookings found in this category</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+
+            filtered.forEach(booking => {
+                const customerUser = allUsers.find(u => u.userId === booking.customerId);
+                const worker = allWorkers.find(w => w.$id === booking.workerId);
+                const workerUser = worker ? allUsers.find(u => u.userId === worker.userId) : null;
+
+                const statusColors = {
+                    pending: 'warning',
+                    accepted: 'info',
+                    'in-progress': 'info',
+                    completed: 'success',
+                    cancelled: 'error'
+                };
+
+                const card = document.createElement('div');
+                card.className = 'booking-card';
+                card.setAttribute('data-status', booking.status);
+                card.innerHTML = `
+                    <div class="booking-header">
+                        <div class="booking-info">
+                            <h3>${(booking.serviceCategory || 'Service').replace('-', ' ').toUpperCase()}</h3>
+                            <div class="booking-id">ID: ${booking.$id.substring(0, 12)}</div>
+                        </div>
+                        <span class="badge badge-${statusColors[booking.status] || 'info'}">${booking.status}</span>
+                    </div>
+
+                    <div class="booking-details">
+                        <div class="detail-item">
+                            <strong>Customer:</strong>
+                            <span>${customerUser ? customerUser.name : booking.customerId?.substring(0, 8) || 'N/A'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Worker:</strong>
+                            <span>${workerUser ? workerUser.name : (worker ? 'Worker #' + worker.$id.substring(0, 8) : 'Unassigned')}</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Location:</strong>
+                            <span>${booking.location || 'N/A'}, ${booking.pincode || ''}</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Scheduled:</strong>
+                            <span>${booking.scheduledTime ? new Date(booking.scheduledTime).toLocaleString() : 'Not set'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Price:</strong>
+                            <span>₹${booking.estimatedPrice || 0}</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Created:</strong>
+                            <span>${new Date(booking.createdAt).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+
+                    ${booking.problemDescription ? `
+                    <div class="booking-problem">
+                        <strong>Problem: </strong>${booking.problemDescription}
+                    </div>` : ''}
+
+                    <div class="booking-actions">
+                        ${booking.status === 'pending' ? `
+                            <button class="btn btn-primary btn-sm" onclick="quickUpdate('${booking.$id}', 'accepted')">Accept</button>
+                            <button class="btn btn-secondary btn-sm" onclick="quickUpdate('${booking.$id}', 'cancelled')">Cancel</button>
+                        ` : ''}
+                        ${booking.status === 'accepted' ? `
+                            <button class="btn btn-primary btn-sm" onclick="quickUpdate('${booking.$id}', 'completed')">Mark Completed</button>
+                        ` : ''}
+                        <button class="btn btn-ghost btn-sm" onclick="openStatusModal('${booking.$id}', '${booking.status}')">Change Status</button>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentTab = btn.dataset.tab;
+                displayBookings();
+            });
+        });
+
+        // Quick status update
+        window.quickUpdate = async function (bookingId, newStatus) {
+            showLoading('Updating booking...');
+            try {
+                await databases.updateDocument(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.bookings,
+                    bookingId,
+                    { status: newStatus, updatedAt: new Date().toISOString() }
+                );
+
+                // Refresh local data
+                const idx = allBookings.findIndex(b => b.$id === bookingId);
+                if (idx !== -1) allBookings[idx].status = newStatus;
+
+                updateStats();
+                updateTabCounts();
+                displayBookings();
+                showAlert(`Booking ${newStatus} successfully!`, 'success');
+            } catch (error) {
+                console.error('Error updating booking:', error);
+                showAlert('Failed to update booking', 'error');
+            } finally {
+                hideLoading();
+            }
+        };
+
+        // Status modal
+        window.openStatusModal = function (bookingId, currentStatus) {
+            editingBookingId = bookingId;
+            document.getElementById('newStatus').value = currentStatus;
+            document.getElementById('statusModal').classList.add('active');
+        };
+
+        window.closeStatusModal = function () {
+            document.getElementById('statusModal').classList.remove('active');
+            editingBookingId = null;
+        };
+
+        window.saveStatus = async function () {
+            if (!editingBookingId) return;
+            const newStatus = document.getElementById('newStatus').value;
+            closeStatusModal();
+            await quickUpdate(editingBookingId, newStatus);
+        };
+
+        // Logout
         document.getElementById('logoutBtn').addEventListener('click', logout);
 
-        // Initialize on page load
         init();
     </script>
 
