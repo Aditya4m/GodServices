@@ -324,7 +324,7 @@
     </style>
 
     <script type="module">
-        import { account, databases, storage, APPWRITE_CONFIG, showLoading, hideLoading, showAlert, logout } from '/js/appwrite.js';
+        import { account, databases, storage, APPWRITE_CONFIG, showLoading, hideLoading, showAlert, logout, requireAuth } from '/js/appwrite.js';
         import { Query } from 'https://cdn.jsdelivr.net/npm/appwrite@14.0.1/+esm';
 
         let currentUser = null;
@@ -385,19 +385,7 @@
 
             try {
                 // Check authentication
-                try {
-                    currentUser = await account.get();
-                } catch (authError) {
-                    console.error('Authentication error:', authError);
-                    if (authError.code === 401 || authError.message.includes('guests')) {
-                        showAlert('Please login to continue', 'error');
-                        setTimeout(() => {
-                            window.location.href = '/login.html';
-                        }, 1500);
-                        return;
-                    }
-                    throw authError;
-                }
+                currentUser = await requireAuth('customer');
 
                 // Load category filter from DB
                 await loadCategoryFilter();
