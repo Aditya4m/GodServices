@@ -290,6 +290,7 @@
 
         // Initialize
         async function init() {
+            showLoading('Checking session...');
             try {
                 // Check authentication - redirect to login if not logged in
                 try {
@@ -312,9 +313,9 @@
                 const price = sessionStorage.getItem('estimatedPrice');
 
                 if (!workerId || !category) {
-                    showAlert('Invalid booking. Please select a worker first.', 'error');
+                    showAlert('Invalid booking. Redirecting to login...', 'error');
                     setTimeout(() => {
-                        window.location.href = '/customer/services.html';
+                        window.location.href = '/login.html';
                     }, 2000);
                     return;
                 }
