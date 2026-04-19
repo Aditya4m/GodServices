@@ -280,7 +280,7 @@
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
     <script type="module">
-        import { account, databases, storage, APPWRITE_CONFIG, showLoading, hideLoading, showAlert, logout } from '/js/appwrite.js';
+        import { account, databases, storage, APPWRITE_CONFIG, showLoading, hideLoading, showAlert, logout, getUserRole } from '/js/appwrite.js';
         import { ID, Query } from 'https://cdn.jsdelivr.net/npm/appwrite@14.0.1/+esm';
 
         let currentUser = null;
@@ -306,6 +306,15 @@
                     throw authError;
                 }
 
+                // Role Guard: Check if user is a customer
+                const role = await getUserRole(currentUser.$id);
+                if (role !== 'customer') {
+                    showAlert('Unauthorized. Only customers can book services.', 'error');
+                    setTimeout(() => {
+                        window.location.href = '/index.html';
+                    }, 2000);
+                    return;
+                }
                 // Get booking details from session storage
                 const workerId = sessionStorage.getItem('selectedWorker');
                 const category = sessionStorage.getItem('serviceCategory');
